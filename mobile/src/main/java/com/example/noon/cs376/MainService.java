@@ -19,7 +19,7 @@ import com.google.android.gms.wearable.Wearable;
 
 public class MainService extends Service {
     /*do RMS calculations here and send them to the watch.*/
-    public static final String VIBRATE = "/vibrate";
+    public static final String PATH = "/watch";
     private GoogleApiClient googleApiClient;
 
 
@@ -41,6 +41,13 @@ public class MainService extends Service {
                 .build();
 
         googleApiClient.connect();
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        googleApiClient.disconnect();
     }
 
 

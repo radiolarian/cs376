@@ -8,7 +8,6 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
@@ -122,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 if (bufferReadResult > 0)
                 {
                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, RelativeAudioParser.RMS(buffer));
+                   break;
                 }
             }
 
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                     // We'll probably want to filter/smooth this result in the future.
                     if (bound) {
 
-                        mService.sendMessage(MainService.VIBRATE, result.data);
+                        mService.sendMessage(MainService.PATH, result.data);
                     }
 
                     str = "Data: " + result.data + "\r\n";
@@ -155,9 +155,12 @@ public class MainActivity extends AppCompatActivity {
             else
                 Log.d("Result", "Null result");
 
-            //Now start the task again
-            _task = new MonitorAudioTask();
-            _task.execute(null, null, null);
+            if (!isCancelled())
+            {
+                //Now start the task again
+                _task = new MonitorAudioTask();
+                _task.execute(null, null, null);
+            }
         }
     }
 }

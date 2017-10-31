@@ -16,22 +16,23 @@ import java.nio.charset.StandardCharsets;
 
 public class WatchService extends WearableListenerService {
     /*variables for path control*/
-    private static final String VIBRATE = "/vibrate";
+    private static final String PATH = "/watch";
+    private static final double VIBRATION_THRESHOLD = 500.0;
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.d("tag", messageEvent.getData().toString());
+        String s = new String(messageEvent.getData());
+        Log.d("tag", s);
 
-        if( messageEvent.getPath().equalsIgnoreCase( VIBRATE ) ) {
-            /*do some vibrations*/
-            //TODO if RMS > _: ...
-            Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-            long[] vibrationPattern = {0, 500, 50, 300}; //in ms i think...i copied this from SoF
-            //-1 - don't repeat
-            final int indexInPatternToRepeat = -1;
-            vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
-            Log.d("tag", "Vibrated");
-
+        if( messageEvent.getPath().equalsIgnoreCase( PATH ) ) {
+            if (Double.parseDouble(s) >= VIBRATION_THRESHOLD) {
+                Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+                long[] vibrationPattern = {0, 500, 50, 300}; //in ms i think...i copied this from SoF
+                //-1 - don't repeat
+                final int indexInPatternToRepeat = -1;
+                vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
+                Log.d("tag", "Vibrated");
+            }
 
         } else {
             super.onMessageReceived( messageEvent );
