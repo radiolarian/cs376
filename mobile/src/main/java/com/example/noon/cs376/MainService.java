@@ -19,19 +19,18 @@ import com.google.android.gms.wearable.Wearable;
 
 public class MainService extends Service {
     /*do RMS calculations here and send them to the watch.*/
-    private static final String VIBRATE = "/vibrate";
+    public static final String VIBRATE = "/vibrate";
     private GoogleApiClient googleApiClient;
 
 
     @Override
     public void onCreate() {
-
+        super.onCreate();
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
                         Log.d("tag", "onConnected");
-                        sendMessage(VIBRATE, getRMS()); //here is where we pass the RMS to the watch
                     }
 
                     @Override
@@ -43,6 +42,7 @@ public class MainService extends Service {
 
         googleApiClient.connect();
     }
+
 
     //idk what any of this chunk does i just need it so i dont get errors
     @Override
@@ -57,7 +57,7 @@ public class MainService extends Service {
     }
 
 
-    private void sendMessage( final String path, final String text ) {
+    public void sendMessage( final String path, final String text ) {
         new Thread( new Runnable() {
             @Override
             public void run() {
@@ -69,11 +69,4 @@ public class MainService extends Service {
             }
         }).start();
     }
-
-    private String getRMS () {
-        //COOL CODE HERE
-        //return a string
-        return "1.0";
-    }
-
 }
