@@ -1,6 +1,6 @@
 package com.example.noon.cs376;
 
-import 	android.content.ComponentName;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         // Set up audio buffer
         try
         {
+            Log.d("Init", "Setting up AudioRecord");
             BUFFER_SIZE = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING) * 8;
             _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, FREQUENCY,
                     CHANNEL_CONFIG, AUDIO_ENCODING, BUFFER_SIZE);
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (Exception ex)
         {
-            //Do nothing
+            Log.d("Exception", ex.toString());
         }
     }
 
@@ -138,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
                     // For now, send the message to the watch for each update.
                     // We'll probably want to filter/smooth this result in the future.
                     if (bound) {
+
                         mService.sendMessage(MainService.VIBRATE, result.data);
                     }
 

@@ -20,7 +20,7 @@ public class WatchService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.d("tag", "Watch Listener activated ");
+        Log.d("tag", messageEvent.getData().toString());
 
         if( messageEvent.getPath().equalsIgnoreCase( VIBRATE ) ) {
             /*do some vibrations*/

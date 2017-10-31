@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.noon.cs376">
 
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -16,11 +19,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".MainService" >
+
+        <service android:name=".MainService">
             <intent-filter>
-                <action android:name=
-                    "com.google.android.gms.wearable.BIND_LISTENER" />
-                <!-- TODO CHECK THIS DEPRICATION?? ugh-->
+                <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
+                <!-- TODO CHECK THIS DEPRICATION?? ugh -->
             </intent-filter>
         </service>
     </application>
