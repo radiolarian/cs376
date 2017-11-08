@@ -1,5 +1,7 @@
 #include <Servo.h>
 
+#define MANUAL
+
 #define BAUD_RATE 9600
 #define MICROPHONE_PIN 14
 #define MOTOR_PIN 23
@@ -23,10 +25,20 @@ void setup() {
 }
 
 void loop() {
+  #ifdef MANUAL
+  while (Serial.available() > 0)
+  {
+    int pos = Serial.parseInt();
+    motor.write(pos);
+  }
+  #endif
+
+  #ifndef MANUAL
   // put your main code here, to run repeatedly:
   int newVolume = analogRead(MICROPHONE_PIN);
   movingAverage = (MOVING_AVERAGE_ALPHA * newVolume) + ((1 - MOVING_AVERAGE_ALPHA) * movingAverage);
 
   int pos = map(movingAverage, MIN_MICROPHONE_VALUE, MAX_MICROPHONE_VALUE, MIN_POS, MAX_POS);
   motor.write(pos);
+  #endif
 }
