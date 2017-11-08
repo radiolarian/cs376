@@ -17,7 +17,12 @@ import java.nio.charset.StandardCharsets;
 public class WatchService extends WearableListenerService {
     /*variables for path control*/
     private static final String PATH = "/watch";
-    private static final double VIBRATION_THRESHOLD = 500.0;
+    private static final double VIBRATION_THRESHOLD = 1000.0;
+    private static final double VIBRATION_THRESHOLD_LOUD = 2000.0;
+    private static final long[] vibrationPattern = {0, 250}; //wait time, on time
+    private static final long[] vibrationPatternLoud = {0, 250, 100, 500}; //wait time, on time
+    final int indexInPatternToRepeat = -1;
+
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
@@ -25,11 +30,12 @@ public class WatchService extends WearableListenerService {
         Log.d("tag", s);
 
         if( messageEvent.getPath().equalsIgnoreCase( PATH ) ) {
-            if (Double.parseDouble(s) >= VIBRATION_THRESHOLD) {
-                Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-                long[] vibrationPattern = {0, 500, 50, 300}; //in ms i think...i copied this from SoF
-                //-1 - don't repeat
-                final int indexInPatternToRepeat = -1;
+            Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (Double.parseDouble(s) >= VIBRATION_THRESHOLD_LOUD) {
+                vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
+                Log.d("tag", "Vibrated Loudly");
+            }
+            else if (Double.parseDouble(s) >= VIBRATION_THRESHOLD) {
                 vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
                 Log.d("tag", "Vibrated");
             }

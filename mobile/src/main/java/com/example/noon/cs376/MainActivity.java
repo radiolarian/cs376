@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.WindowManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         {
             Log.d("Exception", ex.toString());
         }
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //screen needs to be on for it to collect data
     }
 
     @Override
