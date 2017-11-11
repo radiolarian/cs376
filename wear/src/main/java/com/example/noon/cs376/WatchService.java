@@ -17,8 +17,8 @@ import java.nio.charset.StandardCharsets;
 public class WatchService extends WearableListenerService {
     /*variables for path control*/
     private static final String PATH = "/watch";
-    private static final double VIBRATION_THRESHOLD = 1000.0;
-    private static final double VIBRATION_THRESHOLD_LOUD = 2000.0;
+    private static final double VIBRATION_THRESHOLD = 5000.0;
+    private static final double VIBRATION_THRESHOLD_LOUD = 15000.0;
     private static final long[] vibrationPattern = {0, 250}; //wait time, on time
     private static final long[] vibrationPatternLoud = {0, 250, 100, 500}; //wait time, on time
     final int indexInPatternToRepeat = -1;
