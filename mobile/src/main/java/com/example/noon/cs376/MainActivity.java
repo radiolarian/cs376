@@ -13,7 +13,13 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,9 +32,12 @@ public class MainActivity extends AppCompatActivity {
     private AudioRecord _audioRecord;
     private AsyncTask<Void, Void, ParseResult> _task;
     private boolean bound = false;
+    private boolean inTrainingState = false;
 
     MainDatabase db;
     MainDao dao;
+
+    AlizeSpeechRecognizer alize;
 
     MainService mService;
 
@@ -41,6 +50,31 @@ public class MainActivity extends AppCompatActivity {
         db = Room.databaseBuilder(getApplicationContext(),
                 MainDatabase.class, "database-name").build();
         dao = db.mainDao();
+
+        // Create Alize client
+        alize = new AlizeSpeechRecognizer(getApplicationContext());
+
+        //link the button
+        final Button button = findViewById(R.id.train);
+        button.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    inTrainingState = true;
+                    Log.d("Alize", "Starting training");
+                    // Do what you want
+                    return true;
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP){
+                    inTrainingState = false;
+                    Log.d("Alize", "Ending training");
+                    // Do what you want
+                    return true;
+                }
+
+                return false;
+            }
+        });
 
         // Set up audio buffer
         try
@@ -60,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //screen needs to be on for it to collect data
+
     }
 
     @Override
@@ -131,6 +166,14 @@ public class MainActivity extends AppCompatActivity {
                 bufferReadResult = new Long(_audioRecord.read(buffer, 0, BUFFER_SIZE));
                 if (bufferReadResult > 0)
                 {
+                    if (inTrainingState)
+                    {
+                        byte[] audioBytes = new byte[2 * BUFFER_SIZE];
+                        ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
+                        alize.trainSpeakerModel(audioBytes);
+                        alize.resetAudio();
+                    }
+
                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, RelativeAudioParser.RMS(buffer));
                    break;
                 }
