@@ -1,5 +1,6 @@
 package com.example.noon.cs376;
 
+import android.arch.persistence.room.Room;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +27,9 @@ public class MainActivity extends AppCompatActivity {
     private AsyncTask<Void, Void, ParseResult> _task;
     private boolean bound = false;
 
+    MainDatabase db;
+    MainDao dao;
+
     MainService mService;
 
     @Override
@@ -33,7 +37,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //connect to watch
+        // Create database
+        db = Room.databaseBuilder(getApplicationContext(),
+                MainDatabase.class, "database-name").build();
+        dao = db.mainDao();
 
         // Set up audio buffer
         try
@@ -42,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
             BUFFER_SIZE = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING) * 8;
             _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, FREQUENCY,
                     CHANNEL_CONFIG, AUDIO_ENCODING, BUFFER_SIZE);
+            Log.d("Init", "AudioRecord set up successfully");
 
             // For now, let's set window size to buffer size (probably will need to adjust)
             RMS_WINDOW_SIZE = BUFFER_SIZE;
@@ -132,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(ParseResult result)
+        protected void onPostExecute(final ParseResult result)
         {
             if (result != null)
             {
@@ -142,10 +150,8 @@ public class MainActivity extends AppCompatActivity {
                     // For now, send the message to the watch for each update.
                     // We'll probably want to filter/smooth this result in the future.
                     if (bound) {
-
                         mService.sendMessage(MainService.PATH, result.data);
                     }
-
                     str = "Data: " + result.data + "\r\n";
                 }
                 else
@@ -154,6 +160,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Log.d("Result", str);
+                new Thread( new Runnable() {
+                    @Override
+                    public void run() {
+                        dao.insert(result);
+                    }
+                }).start();
+                // Insert into database
             }
             else
                 Log.d("Result", "Null result");
