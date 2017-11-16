@@ -1,7 +1,9 @@
 package com.example.noon.cs376;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import AlizeSpkRec.*;
 import android.content.Context;
@@ -28,14 +30,93 @@ class AlizeSpeechRecognizer {
     }
 
     private void initialize (Context context) throws IOException, AlizeException {
-        InputStream configAsset = context.getAssets().open("AlizeDefault.cfg");
-        recognizer = new SimpleSpkDetSystem(configAsset, context.getFilesDir().getPath());
-        configAsset.close();
+//        InputStream configAsset = context.getAssets().open("config.cfg");
+        String config = "########################################################\n" +
+                "#      Miscellaneous\n" +
+                "########################################################\n" +
+                "bigEndian                   false\n" +
+                "featureServerMemAlloc       10000000\n" +
+                "featureServerBufferSize     ALL_FEATURES\n" +
+                "featureServerMode           FEATURE_WRITABLE\n" +
+                "frameLength                 0.01\n" +
+                "sampleRate                  100\n" +
+                "segmentalMode               false\n" +
+                "debug                       false\n" +
+                "verboseLevel                1\n" +
+                "\n" +
+                "\n" +
+                "########################################################\n" +
+                "#      Computation\n" +
+                "########################################################\n" +
+                "topDistribsCount            10\n" +
+                "computeLLKWithTopDistribs   COMPLETE\n" +
+                "maxLLK                      200\n" +
+                "minLLK                      -200\n" +
+                "channelCompensation         none\n" +
+                "nbTrainIt                   1\n" +
+                "MAPAlgo                     MAPOccDep\n" +
+                "meanAdapt                   true\n" +
+                "MAPRegFactorMean            14.0\n" +
+                "regulationFactor            14.0\n" +
+                "MAPAlpha                    0.5\n" +
+                "#inputWorldFilename          world\n" +
+                "\n" +
+                "\n" +
+                "########################################################\n" +
+                "#      Formats and paths\n" +
+                "########################################################\n" +
+                "mixtureFilesPath            gmm/\n" +
+                "loadMixtureFileFormat       RAW\n" +
+                "loadMixtureFileExtension    .gmm\n" +
+                "saveMixtureFileFormat       RAW\n" +
+                "saveMixtureFileExtension    .gmm\n" +
+                "\n" +
+                "featureFilesPath            prm/\n" +
+                "loadFeatureFileFormat       SPRO4\n" +
+                "loadFeatureFileExtension    .prm\n" +
+                "saveFeatureFileFormat       SPRO4\n" +
+                "saveFeatureFileExtension    .prm\n" +
+                "\n" +
+                "audioFilesPath              audio/\n" +
+                "\n" +
+                "\n" +
+                "########################################################\n" +
+                "#      Feature options\n" +
+                "########################################################\n" +
+                "loadFeatureFileBigEndian    false\n" +
+                "addDefaultLabel             false\n" +
+                "defaultLabel                speech\n" +
+                "labelSelectedFrames         speech\n" +
+                "featureServerMask           0-18,20-50\n" +
+                "vectSize                     50\n" +
+                "\n" +
+                "\n" +
+                "########################################################\n" +
+                "#      Parameterization options\n" +
+                "########################################################\n" +
+                "SPRO_sampleRate              8000\n" +
+                "SPRO_f_max                   1\n" +
+                "SPRO_f_min                   0\n" +
+                "SPRO_emphco                  0.97\n" +
+                "SPRO_nfilters                24\n" +
+                "SPRO_numceps                 19\n" +
+                "SPRO_lifter                  22\n" +
+                "SPRO_usemel                  true\n" +
+                "SPRO_add_energy\n" +
+                "SPRO_add_delta\n" +
+                "SPRO_add_acceleration\n";
+        InputStream stream = new ByteArrayInputStream(config.getBytes(StandardCharsets.UTF_8.name()));
+
+        recognizer = new SimpleSpkDetSystem(stream, context.getFilesDir().getPath());
+//        Log.d("alize", "path is ," + context.getFilesDir().getPath());
+//        configAsset.close();
+
+//      TODO: uncomment out this code if we find a gmm file
         InputStream backgroundModelAsset = context.getAssets().open("gmm/world.gmm");
         recognizer.loadBackgroundModel(backgroundModelAsset);
         backgroundModelAsset.close();
 
-        System.out.println("System status:");
+        System.out.println("!!!!!! System status:");
         System.out.println("  # of features: " + recognizer.featureCount());   // at this point, 0
         System.out.println("  # of models: " + recognizer.speakerCount());     // at this point, 0
         System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
