@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 
 import AlizeSpkRec.*;
 import android.content.Context;
+import android.support.v4.content.res.TypedArrayUtils;
 import android.util.Log;
 
 
@@ -18,6 +19,7 @@ class AlizeSpeechRecognizer {
 
     private static final String SPEAKER_ID = "speaker";
     SimpleSpkDetSystem recognizer;
+    byte[] currentAudio = new byte[0];
 
     public AlizeSpeechRecognizer(Context context)
     {
@@ -123,17 +125,30 @@ class AlizeSpeechRecognizer {
         System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
     }
 
+    public byte[] concatenateAudio(byte[] a1, byte[] a2)
+    {
+        byte[] newAudio = new byte[a1.length + a2.length];
+        System.arraycopy(a1, 0, newAudio, 0, a1.length);
+        System.arraycopy(a2, 0, newAudio, a1.length, a2.length);
+        return newAudio;
+    }
+
     public void addNewAudioSample(byte[] audio)
+    {
+        currentAudio = concatenateAudio(currentAudio, audio);
+    }
+
+    public void commitAudio()
     {
         // Send audio to the system
         try {
-            recognizer.addAudio(audio);
+            recognizer.addAudio(currentAudio);
             System.out.println("Adding new audio sample");    // true
         } catch (Exception e) {
             Log.e("Alize", e.toString());
-
         }
     }
+
 
     public void trainModel()
     {
@@ -146,7 +161,7 @@ class AlizeSpeechRecognizer {
             System.out.println("  # of models: " + recognizer.speakerCount());     // at this point, 0
             System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
 
-            resetAudio();
+            resetAll();
         } catch (Exception e) {
             Log.e("Alize", e.toString() + "\n" + e.getStackTrace().toString());
         }
@@ -155,9 +170,10 @@ class AlizeSpeechRecognizer {
     public void testModel()
     {
         try {
-        // Perform speaker verification against the model we created earlier
-        SimpleSpkDetSystem.SpkRecResult verificationResult = recognizer.verifySpeaker(SPEAKER_ID);
-        Log.d("Alize", "Test result: Match?: " + verificationResult.match + ", Score: " + verificationResult.score);
+            // Perform speaker verification against the model we created earlier
+            SimpleSpkDetSystem.SpkRecResult verificationResult = recognizer.verifySpeaker(SPEAKER_ID);
+            Log.d("Alize", "Test result: Match?: " + verificationResult.match + ", Score: " + verificationResult.score);
+            resetAll();
         } catch (Exception e) {
             Log.e("Alize", e.toString());
         }

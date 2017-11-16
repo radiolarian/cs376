@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     //private static final double QUIET_THRESHOLD = 32768.0 * 0.02; //anything higher than 0.02% is considered non-silence
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_CONFIGURATION_MONO;
     private static final int AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+    private static final int MIN_BUFFER_SIZE_MULTIPLIER = 1;
     private int BUFFER_SIZE;
     private int RMS_WINDOW_SIZE;
     private AudioRecord _audioRecord;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP){
                     inNewSampleRecordingState = false;
+                    alize.commitAudio();
                     Log.d("Alize", "Ending new sample recording");
                     // Do what you want
                     return true;
@@ -90,11 +92,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         final Button testButton = findViewById(R.id.test_model);
-        trainButton.setOnTouchListener(new View.OnTouchListener() {
+        testButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Alize", "Starting training");
+                    Log.d("Alize", "Starting testing");
                     alize.testModel();
                     // Do what you want
                     return true;
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         try
         {
             Log.d("Init", "Setting up AudioRecord");
-            BUFFER_SIZE = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING) * 8;
+            BUFFER_SIZE = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING) * 8 * MIN_BUFFER_SIZE_MULTIPLIER;
             _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, FREQUENCY,
                     CHANNEL_CONFIG, AUDIO_ENCODING, BUFFER_SIZE);
             Log.d("Init", "AudioRecord set up successfully");
