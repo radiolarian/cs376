@@ -19,7 +19,6 @@ class AlizeSpeechRecognizer {
 
     private static final String SPEAKER_ID = "speaker";
     SimpleSpkDetSystem recognizer;
-    byte[] currentAudio = new byte[0];
 
     public AlizeSpeechRecognizer(Context context)
     {
@@ -125,30 +124,16 @@ class AlizeSpeechRecognizer {
         System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
     }
 
-    public byte[] concatenateAudio(byte[] a1, byte[] a2)
-    {
-        byte[] newAudio = new byte[a1.length + a2.length];
-        System.arraycopy(a1, 0, newAudio, 0, a1.length);
-        System.arraycopy(a2, 0, newAudio, a1.length, a2.length);
-        return newAudio;
-    }
-
     public void addNewAudioSample(byte[] audio)
-    {
-        currentAudio = concatenateAudio(currentAudio, audio);
-    }
-
-    public void commitAudio()
     {
         // Send audio to the system
         try {
-            recognizer.addAudio(currentAudio);
+            recognizer.addAudio(audio);
             System.out.println("Adding new audio sample");    // true
         } catch (Exception e) {
             Log.e("Alize", e.toString());
         }
     }
-
 
     public void trainModel()
     {

@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP){
                     inNewSampleRecordingState = false;
-                    alize.commitAudio();
                     Log.d("Alize", "Ending new sample recording");
                     // Do what you want
                     return true;
