@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private AudioRecord _audioRecord;
     private AsyncTask<Void, Void, ParseResult> _task;
     private boolean bound = false;
-    private boolean inTrainingState = false;
+    private boolean inNewSampleRecordingState = false;
 
     MainDatabase db;
     MainDao dao;
@@ -54,24 +54,51 @@ public class MainActivity extends AppCompatActivity {
         // Create Alize client
         alize = new AlizeSpeechRecognizer(getApplicationContext());
 
-        //link the button
-        final Button button = findViewById(R.id.train);
-        button.setOnTouchListener(new View.OnTouchListener() {
+        //link the buttons
+        final Button addSampleButton = findViewById(R.id.add_sample);
+        addSampleButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    inTrainingState = true;
-                    Log.d("Alize", "Starting training");
+                    inNewSampleRecordingState = true;
+                    Log.d("Alize", "Recording a new sample...");
                     // Do what you want
                     return true;
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP){
-                    inTrainingState = false;
-                    Log.d("Alize", "Ending training");
+                    inNewSampleRecordingState = false;
+                    Log.d("Alize", "Ending new sample recording");
                     // Do what you want
                     return true;
                 }
 
+                return false;
+            }
+        });
+        final Button trainButton = findViewById(R.id.train);
+        trainButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d("Alize", "Starting training");
+                    alize.trainModel();
+                    // Do what you want
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        final Button testButton = findViewById(R.id.test_model);
+        trainButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d("Alize", "Starting training");
+                    alize.testModel();
+                    // Do what you want
+                    return true;
+                }
                 return false;
             }
         });
@@ -166,12 +193,12 @@ public class MainActivity extends AppCompatActivity {
                 bufferReadResult = new Long(_audioRecord.read(buffer, 0, BUFFER_SIZE));
                 if (bufferReadResult > 0)
                 {
-                    if (inTrainingState)
+                    if (inNewSampleRecordingState)
                     {
                         byte[] audioBytes = new byte[2 * BUFFER_SIZE];
                         ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
-                        alize.trainSpeakerModel(audioBytes);
-                        alize.resetAudio();
+                        alize.addNewAudioSample(audioBytes);
+                        //alize.resetAudio();
                     }
 
                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, RelativeAudioParser.RMS(buffer));

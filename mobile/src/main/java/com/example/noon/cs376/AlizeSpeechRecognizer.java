@@ -16,6 +16,7 @@ import android.util.Log;
 
 class AlizeSpeechRecognizer {
 
+    private static final String SPEAKER_ID = "speaker";
     SimpleSpkDetSystem recognizer;
 
     public AlizeSpeechRecognizer(Context context)
@@ -122,22 +123,43 @@ class AlizeSpeechRecognizer {
         System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
     }
 
-    public void trainSpeakerModel(byte[] audio)
+    public void addNewAudioSample(byte[] audio)
     {
         // Send audio to the system
         try {
             recognizer.addAudio(audio);
+            System.out.println("Adding new audio sample");    // true
+        } catch (Exception e) {
+            Log.e("Alize", e.toString());
 
+        }
+    }
+
+    public void trainModel()
+    {
+        try {
             // Train a model with the audio
-            recognizer.createSpeakerModel("Somebody");
+            recognizer.createSpeakerModel(SPEAKER_ID);
 
             System.out.println("System status after training:");
             System.out.println("  # of features: " + recognizer.featureCount());   // at this point, 0
             System.out.println("  # of models: " + recognizer.speakerCount());     // at this point, 0
             System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
+
+            resetAudio();
+        } catch (Exception e) {
+            Log.e("Alize", e.toString() + "\n" + e.getStackTrace().toString());
+        }
+    }
+
+    public void testModel()
+    {
+        try {
+        // Perform speaker verification against the model we created earlier
+        SimpleSpkDetSystem.SpkRecResult verificationResult = recognizer.verifySpeaker(SPEAKER_ID);
+        Log.d("Alize", "Test result: Match?: " + verificationResult.match + ", Score: " + verificationResult.score);
         } catch (Exception e) {
             Log.e("Alize", e.toString());
-
         }
     }
 
@@ -170,7 +192,7 @@ class AlizeSpeechRecognizer {
             recognizer.addAudio(audio);
 
             // Perform speaker verification against the model we created earlier
-            result = recognizer.verifySpeaker("Somebody");
+            result = recognizer.verifySpeaker(SPEAKER_ID);
         }  catch (Exception e) {
         Log.e("Alize", e.toString());
         }
