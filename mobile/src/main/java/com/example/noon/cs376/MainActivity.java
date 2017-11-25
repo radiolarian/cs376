@@ -196,9 +196,11 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if (inNewSampleRecordingState)
                     {
-                        byte[] audioBytes = new byte[2 * BUFFER_SIZE];
-                        ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
-                        alize.addNewAudioSample(audioBytes);
+                        alize.addNewAudioSample(buffer);
+                        //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
+                        //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
+                        //alize.addNewAudioSample(audioBytes);
+                        
                         //alize.resetAudio();
                     }
 

@@ -96,7 +96,7 @@ class AlizeSpeechRecognizer {
                 "########################################################\n" +
                 "#      Parameterization options\n" +
                 "########################################################\n" +
-                "SPRO_sampleRate              8000\n" +
+                "SPRO_sampleRate              44100\n" +
                 "SPRO_f_max                   1\n" +
                 "SPRO_f_min                   0\n" +
                 "SPRO_emphco                  0.97\n" +
@@ -125,6 +125,17 @@ class AlizeSpeechRecognizer {
     }
 
     public void addNewAudioSample(byte[] audio)
+    {
+        // Send audio to the system
+        try {
+            recognizer.addAudio(audio);
+            System.out.println("Adding new audio sample");    // true
+        } catch (Exception e) {
+            Log.e("Alize", e.toString());
+        }
+    }
+
+    public void addNewAudioSample(short[] audio)
     {
         // Send audio to the system
         try {
