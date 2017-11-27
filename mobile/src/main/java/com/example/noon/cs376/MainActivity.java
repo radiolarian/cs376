@@ -20,10 +20,11 @@ import android.widget.Button;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int FREQUENCY = 44100;
+    private static final int FREQUENCY = 8000;
     //private static final double QUIET_THRESHOLD = 32768.0 * 0.02; //anything higher than 0.02% is considered non-silence
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_CONFIGURATION_MONO;
     private static final int AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
             _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, FREQUENCY,
                     CHANNEL_CONFIG, AUDIO_ENCODING, BUFFER_SIZE);
             Log.d("Init", "AudioRecord set up successfully");
+            Log.d("Init", "Buffer size is: " + BUFFER_SIZE);
 
             // For now, let's set window size to buffer size (probably will need to adjust)
             RMS_WINDOW_SIZE = BUFFER_SIZE;
@@ -183,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
         protected ParseResult doInBackground(Void... params)
         {
             short[] buffer = new short[BUFFER_SIZE];
-            Long bufferReadResult = null;
+            int bufferReadResult = 0;
             ParseResult result = new ParseResult(ParseResult.ParseErrorCodes.CANCELLED, "");
 
             while (true)
@@ -191,12 +193,14 @@ public class MainActivity extends AppCompatActivity {
                 if (isCancelled())
                     break;
 
-                bufferReadResult = new Long(_audioRecord.read(buffer, 0, BUFFER_SIZE));
+                bufferReadResult = _audioRecord.read(buffer, 0, BUFFER_SIZE);
+                short[] trimmedBuffer = Arrays.copyOfRange(buffer, 0, bufferReadResult);
                 if (bufferReadResult > 0)
                 {
                     if (inNewSampleRecordingState)
                     {
-                        alize.addNewAudioSample(buffer);
+                        alize.addNewAudioSample(trimmedBuffer);
+
                         //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
                         //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
                         //alize.addNewAudioSample(audioBytes);
@@ -204,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
                         //alize.resetAudio();
                     }
 
-                   result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, RelativeAudioParser.RMS(buffer));
+                   result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, RelativeAudioParser.RMS(trimmedBuffer));
                    break;
                 }
             }

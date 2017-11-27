@@ -41,7 +41,7 @@ class AlizeSpeechRecognizer {
                 "featureServerBufferSize     ALL_FEATURES\n" +
                 "featureServerMode           FEATURE_WRITABLE\n" +
                 "frameLength                 0.01\n" +
-                "sampleRate                  100\n" +
+                "sampleRate                  8000\n" +
                 "segmentalMode               false\n" +
                 "debug                       false\n" +
                 "verboseLevel                1\n" +
@@ -61,7 +61,7 @@ class AlizeSpeechRecognizer {
                 "MAPRegFactorMean            14.0\n" +
                 "regulationFactor            14.0\n" +
                 "MAPAlpha                    0.5\n" +
-                "#inputWorldFilename          world\n" +
+                "#inputWorldFilename         world\n" +
                 "\n" +
                 "\n" +
                 "########################################################\n" +
@@ -96,14 +96,16 @@ class AlizeSpeechRecognizer {
                 "########################################################\n" +
                 "#      Parameterization options\n" +
                 "########################################################\n" +
-                "SPRO_sampleRate              44100\n" +
-                "SPRO_f_max                   1\n" +
+                "SPRO_sampleRate              8000\n" +
+                "SPRO_f_max                   0\n" +
                 "SPRO_f_min                   0\n" +
                 "SPRO_emphco                  0.97\n" +
                 "SPRO_nfilters                24\n" +
                 "SPRO_numceps                 19\n" +
                 "SPRO_lifter                  22\n" +
                 "SPRO_usemel                  true\n" +
+                "SPRO_format                  SPRO_SIG_PCM16_FORMAT\n" +
+                //"SPRO_lswap                   true\n" +
                 "SPRO_add_energy\n" +
                 "SPRO_add_delta\n" +
                 "SPRO_add_acceleration\n";
@@ -139,8 +141,33 @@ class AlizeSpeechRecognizer {
     {
         // Send audio to the system
         try {
-            recognizer.addAudio(audio);
+            byte[] byteArray = new byte[audio.length << 1];
+            for (int i = 0; i < audio.length; i++)
+            {
+                byteArray[i<<1] = (byte) ((audio[i] >> 8) & 0xff);
+                byteArray[(i<<1) + 1] = (byte) (audio[i] & 0xff);
+            }
+            recognizer.addAudio(byteArray);
+            /*
+            System.out.print("New sample shorts, size=" + audio.length + ": ");
+            for (short s : audio)
+            {
+                System.out.print(s + ", ");
+            }
+            System.out.println();
+
+            System.out.print("New sample bytes, size=" + byteArray.length + ": ");
+            for (byte s : byteArray)
+            {
+                System.out.print(s + ", ");
+            }
+            System.out.println();
+            */
             System.out.println("Adding new audio sample");    // true
+            System.out.println("System status after adding:");
+            System.out.println("  # of features: " + recognizer.featureCount());   // at this point, 0
+            System.out.println("  # of models: " + recognizer.speakerCount());     // at this point, 0
+            System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
         } catch (Exception e) {
             Log.e("Alize", e.toString());
         }
@@ -167,6 +194,10 @@ class AlizeSpeechRecognizer {
     {
         try {
             // Perform speaker verification against the model we created earlier
+            System.out.println("System status before testing:");
+            System.out.println("  # of features: " + recognizer.featureCount());   // at this point, 0
+            System.out.println("  # of models: " + recognizer.speakerCount());     // at this point, 0
+            System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
             SimpleSpkDetSystem.SpkRecResult verificationResult = recognizer.verifySpeaker(SPEAKER_ID);
             Log.d("Alize", "Test result: Match?: " + verificationResult.match + ", Score: " + verificationResult.score);
             resetAll();
