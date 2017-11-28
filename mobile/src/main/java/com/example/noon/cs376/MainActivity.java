@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Create database
         db = Room.databaseBuilder(getApplicationContext(),
-                MainDatabase.class, "database-name").build();
+                MainDatabase.class, "database-name").fallbackToDestructiveMigration().build();
         dao = db.mainDao();
 
         //link the buttons
@@ -436,7 +436,7 @@ public class MainActivity extends AppCompatActivity {
         {
             short[] buffer = new short[BUFFER_SIZE];
             int bufferReadResult = 0;
-            ParseResult result = new ParseResult(ParseResult.ParseErrorCodes.CANCELLED, "", -1);
+            ParseResult result = new ParseResult(ParseResult.ParseErrorCodes.CANCELLED, -1, -1, false);
 
             while (true)
             {
@@ -472,15 +472,21 @@ public class MainActivity extends AppCompatActivity {
                         //alize.resetAudio();
                     }
                     float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                    //add result to moving average
-                    movingavg.add(rms);
+                    boolean speakerMatch = parser.isSpeakerMatch();
+
+                    //add result to moving average -- but only if we don't detect the speaker
+                    if (!speakerMatch)
+                    {
+                        movingavg.add(rms);
+                    }
+
                     //update env noise
                     envNoiseLevel = movingavg.getAverage();
                     Log.d("Result", "Env noise: " + Float.toString(envNoiseLevel) + "\r\n");
 
                     //fill result
 
-                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, Float.toString(rms), envNoiseLevel);
+                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
 
                    break;
                 }
@@ -500,28 +506,28 @@ public class MainActivity extends AppCompatActivity {
                     //test: is the RMS above or below threshold of env noise? if so, we want to vibrate watch
                     // if not, just log time and ambient noise level
                     // todo: think about if we should log ambient noise every like x minutes instead?
-                    float upper = envNoiseLevel * TRIGGER_THRESHOLD;
-                    float lower = envNoiseLevel / TRIGGER_THRESHOLD;
-                    float rms = Float.parseFloat(result.data);
-                    if (rms >= upper || rms <= lower ) {
-                        //a hit!
-                        //probably do speaker ID here
-                        //TODO distinguish stop talking from talking too quietly
+                    
+                    if (result.speakerMatch) {
+                        float upper = envNoiseLevel * TRIGGER_THRESHOLD;
+                        float lower = envNoiseLevel / TRIGGER_THRESHOLD;
+                        float rms = result.data;
+                        if (rms >= upper || rms <= lower) {
+                            //a hit!
+                            //probably do speaker ID here
 
-                        //vibrate the watch
-                        if (bound) {
-                            mService.sendMessage(MainService.PATH, result.data);
+                            //vibrate the watch
+                            if (bound) {
+                                mService.sendMessage(MainService.PATH, Float.toString(result.data));
+                            }
+
+                            Log.d("Result", "Over thres!" + result.data + "\r\n");
+
+                        } else {
+                            Log.d("Result", "Under" + result.data + "\r\n");
+                            //TODO debate this w team - should we send empty or just send val? (if send val probs need a boolean entry then)
+
                         }
-
-                        Log.d("Result", "Over thres!" + result.data + "\r\n");
-
-                    } else {
-                        Log.d("Result", "Under" + result.data + "\r\n");
-                        result.data = "";
-                        //TODO debate this w team - should we send empty or just send val? (if send val probs need a boolean entry then)
-
                     }
-
                 }
                 else
                 {
