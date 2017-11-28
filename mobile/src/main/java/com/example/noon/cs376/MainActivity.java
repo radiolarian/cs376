@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private AsyncTask<Void, Void, ParseResult> _task;
     private boolean bound = false;
     private boolean inNewSampleRecordingState = false;
+    private boolean inTestingState = false;
     private float envNoiseLevel; //from movin avg
     private float TRIGGER_THRESHOLD = 1.5f; //vibrate watch if x times softer/louder than env noise
 
@@ -153,10 +154,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    /*
                     Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
                     Log.d("Train", "Current frequency is: " + parser.getCurrentFrequency() + " Hz");
                     Log.d("Verification", "Verification result: " + parser.isSpeakerMatch());
                     parser.resetCurrentBins();
+                    */
+
+                    inTestingState = true;
+
                     return true;
                 }
                 return false;
@@ -293,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
                 short[] trimmedBuffer = Arrays.copyOfRange(buffer, 0, bufferReadResult);
                 if (bufferReadResult > 0)
                 {
-                    if (inNewSampleRecordingState)
+                    if (inNewSampleRecordingState || inTestingState)
                     {
                         double[] x, y;
                         double[] window = fft.getWindow();
@@ -328,12 +334,13 @@ public class MainActivity extends AppCompatActivity {
 
                     //update env noise
                     envNoiseLevel = movingavg.getAverage();
-                    Log.d("Result", "Env noise: " + Float.toString(envNoiseLevel) + "\r\n");
 
                     //fill result
 
                     result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
-
+                    if (inTestingState) {
+                        parser.resetCurrentBins();
+                    }
                    break;
                 }
             }
@@ -352,7 +359,9 @@ public class MainActivity extends AppCompatActivity {
                     //test: is the RMS above or below threshold of env noise? if so, we want to vibrate watch
                     // if not, just log time and ambient noise level
                     // todo: think about if we should log ambient noise every like x minutes instead?
-                    
+
+                    Log.d("ParseResult", "RMS: " + result.data + ", EnvNoise: " + result.envNoise + ", isMatch: " + result.speakerMatch);
+
                     if (result.speakerMatch) {
                         float upper = envNoiseLevel * TRIGGER_THRESHOLD;
                         float lower = envNoiseLevel / TRIGGER_THRESHOLD;
@@ -366,10 +375,9 @@ public class MainActivity extends AppCompatActivity {
                                 mService.sendMessage(MainService.PATH, Float.toString(result.data));
                             }
 
-                            Log.d("Result", "Over thres!" + result.data + "\r\n");
+                            Log.d("Result", "Over/under thres!" + result.data + "\r\n");
 
                         } else {
-                            Log.d("Result", "Under" + result.data + "\r\n");
                             //TODO debate this w team - should we send empty or just send val? (if send val probs need a boolean entry then)
 
                         }
