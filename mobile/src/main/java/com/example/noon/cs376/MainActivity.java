@@ -26,30 +26,16 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
-import com.example.frontend.AudioRecordWrapper;
-import com.example.frontend.MfccMaker;
-import com.example.frontend.RawAudioPlayback;
-import com.example.frontend.Skeleton;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-
-import fr.lium.spkDiarization.lib.DiarizationException;
-import fr.lium.spkDiarization.programs.MClust;
-import fr.lium.spkDiarization.programs.MScore;
-import fr.lium.spkDiarization.programs.MSeg;
-import fr.lium.spkDiarization.programs.MTrainEM;
-import fr.lium.spkDiarization.programs.MTrainInit;
-import fr.lium.spkDiarization.programs.MTrainMAP;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int MOVING_AVG_WINDOW_SIZE = 5; //num of audio samples to determine BG vol
     private static final int FREQUENCY = 8000;
     // Audio recording + play back
-    public AudioRecordWrapper recorderWrapper;
-    public RawAudioPlayback audioPlayer;
 
     // Dialogs
     ProgressDialog progressDialog;
@@ -233,134 +219,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private class recordConvo extends AsyncTask<Void, Void, Void> {
 
-        @Override
-        protected Void doInBackground(Void... params) {
-            recorderWrapper = new AudioRecordWrapper(AUDIO_FILE, AUDIO_SOURCE, SAMPLE_RATE, CHANNELS_IN, AUDIO_FORMAT);
-            recorderWrapper.record();
-            return null;
-        }
-
-    }
-
-    private class trainUBMTask extends AsyncTask<Void, Void, Void> {
-        String[] initParams = {"--trace", "--help", "--kind=DIAG", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--nbComp=8", "--emInitMethod=split_all", "--emCtrl=1,5,0.05", "--tOutputMask=/sdcard/test.init.gmm", "ubm"};
-        String[] UBMParams = {"--trace", "--help", "--kind=DIAG", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emCtrl=1,20,0.01", "--tInputMask=/sdcard/test.init.gmm", "--tOutputMask=/sdcard/test.ubm.gmm", "ubm"};
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            Log.d("MFCC", "Computing features...");
-            MfccMaker Mfcc = new MfccMaker(CONFIG_FILE, AUDIO_FILE, MFCC_FILE, UEM_FILE);
-            Mfcc.produceFeatures();
-
-            try {
-                Log.d("Train", "Starting UBM training");
-                MTrainInit.main(initParams);
-                MTrainEM.main(UBMParams);
-                Log.d("Train", "UBM training complete");
-            } catch (DiarizationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void unused) {
-            Context context = getApplicationContext();
-            CharSequence text = "Finished training ubm";
-            int duration = Toast.LENGTH_SHORT;
-            Toast.makeText(context, text, duration).show();
-        }
-    }
-
-    private class trainTask extends AsyncTask<Void, Void, Void> {
-        String[] initParams = {"--trace", "--help", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emInitMethod=copy", "--tInputMask=/sdcard/test.ubm.gmm", "--tOutputMask=/sdcard/test.init.gmm", "speaker"};
-        String[] trainParams = {"--trace", "--help",  "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emCtrl=1,5,0.01", "--varCtrl=0.01,10.0", "--tInputMask=/sdcard/test.init.gmm", "--tOutputMask=/sdcard/test.speaker.gmm", "--sOutputMask=/sdcard/test.speaker.seg", "speaker"};
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            Log.d("MFCC", "Computing features...");
-            MfccMaker Mfcc = new MfccMaker(CONFIG_FILE, AUDIO_FILE, MFCC_FILE, UEM_FILE);
-            Mfcc.produceFeatures();
-
-            try {
-                Log.d("Train", "Starting training");
-                MTrainInit.main(initParams);
-                MTrainMAP.main(trainParams);
-                Log.d("Train", "training complete");
-            } catch (DiarizationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void unused) {
-            Context context = getApplicationContext();
-            CharSequence text = "Finished training";
-            int duration = Toast.LENGTH_SHORT;
-            Toast.makeText(context, text, duration).show();
-        }
-    }
-
-    private class identifyTask extends AsyncTask<Void, Void, Void> {
-        String[] identifyParams = {"--trace", "--help", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--sTop=5,/sdcard/test.ubm.gmm", "--tInputMask=/sdcard/test.speaker.gmm", "--sOutputMask=/sdcard/test.ident.seg", "--sSetLabel=add", "speaker"};
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            Log.d("MFCC", "Computing features...");
-            MfccMaker Mfcc = new MfccMaker(CONFIG_FILE, AUDIO_FILE, MFCC_FILE, UEM_FILE);
-            Mfcc.produceFeatures();
-
-            try {
-                Log.d("Train", "Starting identification");
-                MScore.main(identifyParams);
-                Log.d("Train", "identification complete");
-            } catch (DiarizationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void unused) {
-            Context context = getApplicationContext();
-            CharSequence text = "Finished training";
-            int duration = Toast.LENGTH_SHORT;
-            Toast.makeText(context, text, duration).show();
-        }
-    }
 
     @Override
     protected void onStart() {
@@ -396,19 +255,6 @@ public class MainActivity extends AppCompatActivity {
         _task.cancel(true);
         _audioRecord.stop();
         movingavg.clear();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        if (recorderWrapper != null) {
-            recorderWrapper.release();
-        }
-
-        if (audioPlayer != null) {
-            audioPlayer.release();
-        }
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
