@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import AlizeSpkRec.*;
+import AlizeSpkRec.BuildConfig;
+
 import android.content.Context;
 import android.support.v4.content.res.TypedArrayUtils;
 import android.util.Log;
@@ -18,6 +20,7 @@ import android.util.Log;
 class AlizeSpeechRecognizer {
 
     private static final String SPEAKER_ID = "speaker";
+    private int modelNumber = 0;
     SimpleSpkDetSystem recognizer;
 
     public AlizeSpeechRecognizer(Context context)
@@ -41,7 +44,7 @@ class AlizeSpeechRecognizer {
                 "featureServerBufferSize     ALL_FEATURES\n" +
                 "featureServerMode           FEATURE_WRITABLE\n" +
                 "frameLength                 0.01\n" +
-                "sampleRate                  8000\n" +
+                "sampleRate                  44100\n" +
                 "segmentalMode               false\n" +
                 "debug                       false\n" +
                 "verboseLevel                1\n" +
@@ -96,7 +99,7 @@ class AlizeSpeechRecognizer {
                 "########################################################\n" +
                 "#      Parameterization options\n" +
                 "########################################################\n" +
-                "SPRO_sampleRate              8000\n" +
+                "SPRO_sampleRate              44100\n" +
                 "SPRO_f_max                   0\n" +
                 "SPRO_f_min                   0\n" +
                 "SPRO_emphco                  0.97\n" +
@@ -115,7 +118,6 @@ class AlizeSpeechRecognizer {
 //        Log.d("alize", "path is ," + context.getFilesDir().getPath());
 //        configAsset.close();
 
-//      TODO: uncomment out this code if we find a gmm file
         InputStream backgroundModelAsset = context.getAssets().open("gmm/world.gmm");
         recognizer.loadBackgroundModel(backgroundModelAsset);
         backgroundModelAsset.close();
@@ -177,7 +179,7 @@ class AlizeSpeechRecognizer {
     {
         try {
             // Train a model with the audio
-            recognizer.createSpeakerModel(SPEAKER_ID);
+            recognizer.createSpeakerModel(SPEAKER_ID + modelNumber);
 
             System.out.println("System status after training:");
             System.out.println("  # of features: " + recognizer.featureCount());   // at this point, 0
@@ -185,6 +187,8 @@ class AlizeSpeechRecognizer {
             System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
 
             resetAll();
+
+            modelNumber++;
         } catch (Exception e) {
             Log.e("Alize", e.toString() + "\n" + e.getStackTrace().toString());
         }
@@ -200,6 +204,22 @@ class AlizeSpeechRecognizer {
             System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
             SimpleSpkDetSystem.SpkRecResult verificationResult = recognizer.verifySpeaker(SPEAKER_ID);
             Log.d("Alize", "Test result: Match?: " + verificationResult.match + ", Score: " + verificationResult.score);
+            resetAll();
+        } catch (Exception e) {
+            Log.e("Alize", e.toString());
+        }
+    }
+
+    public void identifySpeaker()
+    {
+        try {
+            // Perform speaker verification against the model we created earlier
+            System.out.println("System status before testing:");
+            System.out.println("  # of features: " + recognizer.featureCount());   // at this point, 0
+            System.out.println("  # of models: " + recognizer.speakerCount());     // at this point, 0
+            System.out.println("  UBM is loaded: " + recognizer.isUBMLoaded());    // true
+            SimpleSpkDetSystem.SpkRecResult verificationResult = recognizer.identifySpeaker();
+            Log.d("Alize", "Test result: Match?: " + verificationResult.match + ", Speaker: " + verificationResult.speakerId + ", Score: " + verificationResult.score);
             resetAll();
         } catch (Exception e) {
             Log.e("Alize", e.toString());

@@ -37,6 +37,15 @@
             android:layout_below="@+id/train"
             android:layout_marginTop="12dp"
             android:text="Test Model" />
+
+        <Button
+            android:id="@+id/identify_speaker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/test_model"
+            android:layout_marginTop="12dp"
+            android:text="Identify Speaker" />
     </RelativeLayout>
 
     <TextView

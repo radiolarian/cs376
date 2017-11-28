@@ -24,7 +24,7 @@ import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int FREQUENCY = 8000;
+    private static final int FREQUENCY = 44100;
     //private static final double QUIET_THRESHOLD = 32768.0 * 0.02; //anything higher than 0.02% is considered non-silence
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_CONFIGURATION_MONO;
     private static final int AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
@@ -98,6 +98,20 @@ public class MainActivity extends AppCompatActivity {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
                     Log.d("Alize", "Starting testing");
                     alize.testModel();
+                    // Do what you want
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        final Button identifySpeakerButton = findViewById(R.id.identify_speaker);
+        identifySpeakerButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d("Alize", "Identifying speaker");
+                    alize.identifySpeaker();
                     // Do what you want
                     return true;
                 }
