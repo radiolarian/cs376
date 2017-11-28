@@ -472,8 +472,12 @@ public class MainActivity extends AppCompatActivity {
                         //alize.resetAudio();
                     }
                     float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                    //add result to moving average
-                    movingavg.add(rms);
+                    //add result to moving average -- but only if we don't detect the speaker
+                    if (!parser.isSpeakerMatch())
+                    {
+                        movingavg.add(rms);
+                    }
+
                     //update env noise
                     envNoiseLevel = movingavg.getAverage();
                     Log.d("Result", "Env noise: " + Float.toString(envNoiseLevel) + "\r\n");
