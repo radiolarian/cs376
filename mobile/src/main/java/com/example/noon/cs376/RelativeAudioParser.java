@@ -82,8 +82,8 @@ public class RelativeAudioParser {
         currentBins = new double[numRelevantBins];
     }
 
-    // Returns the RMS value (in String format) for an array of values
-    public static String RMS(short[] buffer)
+    // Returns the RMS value as a float for an array of values
+    public static float RMS(short[] buffer)
     {
         float sum = 0f;
         for (int i = 0; i < buffer.length; i++)
