@@ -26,10 +26,13 @@ public class ParseResult
     public ParseErrorCodes errorCode = ParseErrorCodes.ERROR;
 
     @ColumnInfo
-    public String data = "";
+    public float data = -1f;
 
     @ColumnInfo
     public float envNoise = -1f; //-1 means error by default
+
+    @ColumnInfo
+    public boolean speakerMatch = false; //-1 means error by default
 
     @ColumnInfo
     public Long timestamp; //automatically populates when obj created
@@ -57,15 +60,16 @@ public class ParseResult
         ERROR
     }
 
-    public ParseResult(ParseErrorCodes errorCode, String data, float envNoise)
+    public ParseResult(ParseErrorCodes errorCode, float data, float envNoise, boolean speakerMatch)
     {
         this.errorCode = errorCode;
         this.data = data;
         this.envNoise = envNoise;
+        this.speakerMatch = speakerMatch;
         this.timestamp = dateToTimestamp(Calendar.getInstance().getTime());
     }
 
-    public ParseResult(String data)
+    public ParseResult(float data)
     {
         this.data = data;
     }
