@@ -5,6 +5,9 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by estra on 10/30/2017.
  */
@@ -23,6 +26,12 @@ public class ParseResult
     @ColumnInfo
     public String data = "";
 
+    @ColumnInfo
+    public float envNoise = -1f; //-1 means error by default
+
+    @ColumnInfo
+    public Date timestamp; //automatically populates when obj created
+
     public enum ParseErrorCodes
     {
         SUCCESS,
@@ -31,10 +40,12 @@ public class ParseResult
         ERROR
     }
 
-    public ParseResult(ParseErrorCodes errorCode, String data)
+    public ParseResult(ParseErrorCodes errorCode, String data, float envNoise)
     {
         this.errorCode = errorCode;
         this.data = data;
+        this.envNoise = envNoise;
+        this.timestamp = Calendar.getInstance().getTime();
     }
 
     public ParseResult(String data)

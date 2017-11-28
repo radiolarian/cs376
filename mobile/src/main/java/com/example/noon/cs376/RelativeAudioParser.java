@@ -5,14 +5,14 @@ package com.example.noon.cs376;
  */
 
 public class RelativeAudioParser {
-    // Returns the RMS value (in String format) for an array of values
-    public static String RMS(short[] buffer)
+    // Returns the RMS value as a float for an array of values
+    public static float RMS(short[] buffer)
     {
-        double sum = 0.0;
+        float sum = 0f;
         for (int i = 0; i < buffer.length; i++)
         {
             sum += buffer[i] * buffer[i];
         }
-        return Double.toString(Math.sqrt(sum / buffer.length));
+        return (float) Math.sqrt(sum / buffer.length);
     }
 }

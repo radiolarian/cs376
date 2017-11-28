@@ -18,12 +18,17 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int MOVING_AVG_WINDOW_SIZE = 5; //num of audio samples to determine BG vol
     private static final int FREQUENCY = 8000;
     //private static final double QUIET_THRESHOLD = 32768.0 * 0.02; //anything higher than 0.02% is considered non-silence
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_CONFIGURATION_MONO;
@@ -35,10 +40,13 @@ public class MainActivity extends AppCompatActivity {
     private AsyncTask<Void, Void, ParseResult> _task;
     private boolean bound = false;
     private boolean inNewSampleRecordingState = false;
+    private float envNoiseLevel; //from movin avg
+    private float TRIGGER_THRESHOLD = 1.5f; //vibrate watch if x times softer/louder than env noise
 
     MainDatabase db;
     MainDao dao;
 
+    MovingAverage movingavg;
     AlizeSpeechRecognizer alize;
 
     MainService mService;
@@ -125,6 +133,20 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //screen needs to be on for it to collect data
 
+        //create a moving avg filter
+        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
+
+        //init graph TODO replace this
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0, 1),
+                new DataPoint(1, 5),
+                new DataPoint(2, 3),
+                new DataPoint(3, 2),
+                new DataPoint(4, 6)
+        });
+        graph.addSeries(series);
+
     }
 
     @Override
@@ -140,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         unbindService(mConnection);
         bound = false;
+        movingavg.clear();
     }
 
     @Override
@@ -159,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
         _task.cancel(true);
         _audioRecord.stop();
+        movingavg.clear();
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -186,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         {
             short[] buffer = new short[BUFFER_SIZE];
             int bufferReadResult = 0;
-            ParseResult result = new ParseResult(ParseResult.ParseErrorCodes.CANCELLED, "");
+            ParseResult result = new ParseResult(ParseResult.ParseErrorCodes.CANCELLED, "", -1);
 
             while (true)
             {
@@ -207,8 +231,17 @@ public class MainActivity extends AppCompatActivity {
                         
                         //alize.resetAudio();
                     }
+                    float rms = RelativeAudioParser.RMS(trimmedBuffer);
+                    //add result to moving average
+                    movingavg.add(rms);
+                    //update env noise
+                    envNoiseLevel = movingavg.getAverage();
+                    Log.d("Result", "Env noise: " + Float.toString(envNoiseLevel) + "\r\n");
 
-                   result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, RelativeAudioParser.RMS(trimmedBuffer));
+                    //fill result
+
+                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, Float.toString(rms), envNoiseLevel);
+
                    break;
                 }
             }
@@ -224,19 +257,38 @@ public class MainActivity extends AppCompatActivity {
                 String str;
                 if (result.errorCode == ParseResult.ParseErrorCodes.SUCCESS)
                 {
-                    // For now, send the message to the watch for each update.
-                    // We'll probably want to filter/smooth this result in the future.
-                    if (bound) {
-                        mService.sendMessage(MainService.PATH, result.data);
+                    //test: is the RMS above or below threshold of env noise? if so, we want to vibrate watch
+                    // if not, just log time and ambient noise level
+                    // todo: think about if we should log ambient noise every like x minutes instead?
+                    float upper = envNoiseLevel * TRIGGER_THRESHOLD;
+                    float lower = envNoiseLevel / TRIGGER_THRESHOLD;
+                    float rms = Float.parseFloat(result.data);
+                    if (rms >= upper || rms <= lower ) {
+                        //a hit!
+                        //probably do speaker ID here
+
+                        //vibrate the watch
+                        if (bound) {
+                            mService.sendMessage(MainService.PATH, result.data);
+                        }
+
+                        Log.d("Result", "Over thres!" + result.data + "\r\n");
+
+                    } else {
+                        Log.d("Result", "Under" + result.data + "\r\n");
+                        result.data = "";
+                        //TODO debate this w team - should we send empty or just send val? (if send val probs need a boolean entry then)
+
                     }
-                    str = "Data: " + result.data + "\r\n";
+
                 }
                 else
                 {
                     str = "Error: " + result.errorCode.toString();
+                    Log.d("Result", str);
+
                 }
 
-                Log.d("Result", str);
                 new Thread( new Runnable() {
                     @Override
                     public void run() {
