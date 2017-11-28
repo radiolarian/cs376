@@ -266,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     if (rms >= upper || rms <= lower ) {
                         //a hit!
                         //probably do speaker ID here
+                        //TODO distinguish stop talking from talking too quietly
 
                         //vibrate the watch
                         if (bound) {
