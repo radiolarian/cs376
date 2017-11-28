@@ -38,7 +38,7 @@ import edu.cmu.sphinx.frontend.FrontEnd;
 import edu.cmu.sphinx.frontend.util.StreamDataSource;
 import edu.cmu.sphinx.util.props.ConfigurationManager;
 
-class MfccMaker {
+public class MfccMaker {
     String configFile;
     String inputAudioFile;
     String outputMfccFile;

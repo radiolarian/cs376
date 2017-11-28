@@ -1,12 +1,15 @@
 package com.example.noon.cs376;
 
+import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,17 +20,56 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Toast;
+
+import com.example.frontend.AudioRecordWrapper;
+import com.example.frontend.MfccMaker;
+import com.example.frontend.RawAudioPlayback;
+import com.example.frontend.Skeleton;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
+import fr.lium.spkDiarization.lib.DiarizationException;
+import fr.lium.spkDiarization.programs.MClust;
+import fr.lium.spkDiarization.programs.MScore;
+import fr.lium.spkDiarization.programs.MSeg;
+import fr.lium.spkDiarization.programs.MTrainEM;
+import fr.lium.spkDiarization.programs.MTrainInit;
+import fr.lium.spkDiarization.programs.MTrainMAP;
+
 public class MainActivity extends AppCompatActivity {
 
-    private static final int FREQUENCY = 44100;
+    // Audio recording + play back
+    public AudioRecordWrapper recorderWrapper;
+    public RawAudioPlayback audioPlayer;
+
+    // Dialogs
+    ProgressDialog progressDialog;
+    ProgressDialog mProgressDialog;
+    ProgressDialog dProgressDialog;
+    public static final int MFCC_DIALOG = 0;
+    public static final int DRZ_DIALOG = 1;
+
+    // File Locations
+    public static final String AUDIO_FILE = "/sdcard/recordoutput.raw";
+    public static final String CONFIG_FILE = "/sdcard/config.xml";
+    public static final String MFCC_FILE = "/sdcard/test.mfc";
+    public static final String UEM_FILE = "/sdcard/test.uem.seg";
+    public static final String UBM_FILE = "/sdcard/test.ubm.gmm";
+    public static final String IDENT_FILE = "/sdcard/test.ident.seg";
+
+    // Audio Settings
+    public static final int AUDIO_SOURCE = MediaRecorder.AudioSource.VOICE_RECOGNITION;
+    public static final int SAMPLE_RATE = 16000;
+    public static final int CHANNELS_IN = AudioFormat.CHANNEL_IN_MONO;
+    public static final int CHANNELS_OUT = AudioFormat.CHANNEL_CONFIGURATION_MONO;
+    public static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    public static final int AUDIO_STREAM = AudioManager.STREAM_MUSIC;
+    public static final int PLAYBACK_MODE = AudioTrack.MODE_STREAM;
+
     //private static final double QUIET_THRESHOLD = 32768.0 * 0.02; //anything higher than 0.02% is considered non-silence
-    private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_CONFIGURATION_MONO;
-    private static final int AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private static final int MIN_BUFFER_SIZE_MULTIPLIER = 1;
     private int BUFFER_SIZE;
     private int RMS_WINDOW_SIZE;
@@ -39,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     MainDatabase db;
     MainDao dao;
 
-    AlizeSpeechRecognizer alize;
+    //AlizeSpeechRecognizer alize;
 
     MainService mService;
 
@@ -53,23 +95,31 @@ public class MainActivity extends AppCompatActivity {
                 MainDatabase.class, "database-name").build();
         dao = db.mainDao();
 
-        // Create Alize client
-        alize = new AlizeSpeechRecognizer(getApplicationContext());
-
         //link the buttons
         final Button addSampleButton = findViewById(R.id.add_sample);
         addSampleButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    inNewSampleRecordingState = true;
-                    Log.d("Alize", "Recording a new sample...");
+                    Context context = getApplicationContext();
+                    CharSequence text = "Now recording";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+
+                    new recordConvo().execute();
+
                     // Do what you want
                     return true;
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP){
-                    inNewSampleRecordingState = false;
-                    Log.d("Alize", "Ending new sample recording");
+                    if (recorderWrapper != null) {
+                        recorderWrapper.stop();
+                    }
+
+                    Context context = getApplicationContext();
+                    CharSequence text = "Finished recording";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
                     // Do what you want
                     return true;
                 }
@@ -77,14 +127,27 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        final Button trainUBMButton = findViewById(R.id.trainubm);
+        trainUBMButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d("Train", "Starting UBM training");
+                    new trainUBMTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    return true;
+                }
+                return false;
+            }
+        });
+
         final Button trainButton = findViewById(R.id.train);
         trainButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Alize", "Starting training");
-                    alize.trainModel();
-                    // Do what you want
+                    Log.d("Train", "Starting training");
+                    new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     return true;
                 }
                 return false;
@@ -96,9 +159,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Alize", "Starting testing");
-                    alize.testModel();
-                    // Do what you want
+                    Log.d("Identify", "Starting identification");
+                    new identifyTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     return true;
                 }
                 return false;
@@ -111,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
                     Log.d("Alize", "Identifying speaker");
-                    alize.identifySpeaker();
+                    //alize.identifySpeaker();
                     // Do what you want
                     return true;
                 }
@@ -123,9 +185,9 @@ public class MainActivity extends AppCompatActivity {
         try
         {
             Log.d("Init", "Setting up AudioRecord");
-            BUFFER_SIZE = AudioRecord.getMinBufferSize(FREQUENCY, CHANNEL_CONFIG, AUDIO_ENCODING) * 8 * MIN_BUFFER_SIZE_MULTIPLIER;
-            _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, FREQUENCY,
-                    CHANNEL_CONFIG, AUDIO_ENCODING, BUFFER_SIZE);
+            BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNELS_OUT, AUDIO_FORMAT) * 8 * MIN_BUFFER_SIZE_MULTIPLIER;
+            _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE,
+                    CHANNELS_OUT, AUDIO_FORMAT, BUFFER_SIZE);
             Log.d("Init", "AudioRecord set up successfully");
             Log.d("Init", "Buffer size is: " + BUFFER_SIZE);
 
@@ -139,6 +201,135 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //screen needs to be on for it to collect data
 
+    }
+
+    private class recordConvo extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            recorderWrapper = new AudioRecordWrapper(AUDIO_FILE, AUDIO_SOURCE, SAMPLE_RATE, CHANNELS_IN, AUDIO_FORMAT);
+            recorderWrapper.record();
+            return null;
+        }
+
+    }
+
+    private class trainUBMTask extends AsyncTask<Void, Void, Void> {
+        String[] initParams = {"--trace", "--help", "--kind=DIAG", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--nbComp=8", "--emInitMethod=split_all", "--emCtrl=1,5,0.05", "--tOutputMask=/sdcard/test.init.gmm", "ubm"};
+        String[] UBMParams = {"--trace", "--help", "--kind=DIAG", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emCtrl=1,20,0.01", "--tInputMask=/sdcard/test.init.gmm", "--tOutputMask=/sdcard/test.ubm.gmm", "ubm"};
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("MFCC", "Computing features...");
+            MfccMaker Mfcc = new MfccMaker(CONFIG_FILE, AUDIO_FILE, MFCC_FILE, UEM_FILE);
+            Mfcc.produceFeatures();
+
+            try {
+                Log.d("Train", "Starting UBM training");
+                MTrainInit.main(initParams);
+                MTrainEM.main(UBMParams);
+                Log.d("Train", "UBM training complete");
+            } catch (DiarizationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            Context context = getApplicationContext();
+            CharSequence text = "Finished training ubm";
+            int duration = Toast.LENGTH_SHORT;
+            Toast.makeText(context, text, duration).show();
+        }
+    }
+
+    private class trainTask extends AsyncTask<Void, Void, Void> {
+        String[] initParams = {"--trace", "--help", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emInitMethod=copy", "--tInputMask=/sdcard/test.ubm.gmm", "--tOutputMask=/sdcard/test.init.gmm", "speaker"};
+        String[] trainParams = {"--trace", "--help",  "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emCtrl=1,5,0.01", "--varCtrl=0.01,10.0", "--tInputMask=/sdcard/test.init.gmm", "--tOutputMask=/sdcard/test.speaker.gmm", "speaker"};
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("MFCC", "Computing features...");
+            MfccMaker Mfcc = new MfccMaker(CONFIG_FILE, AUDIO_FILE, MFCC_FILE, UEM_FILE);
+            Mfcc.produceFeatures();
+
+            try {
+                Log.d("Train", "Starting training");
+                MTrainInit.main(initParams);
+                MTrainMAP.main(trainParams);
+                Log.d("Train", "training complete");
+            } catch (DiarizationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            Context context = getApplicationContext();
+            CharSequence text = "Finished training";
+            int duration = Toast.LENGTH_SHORT;
+            Toast.makeText(context, text, duration).show();
+        }
+    }
+
+    private class identifyTask extends AsyncTask<Void, Void, Void> {
+        String[] identifyParams = {"--trace", "--help", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--sTop=5,/sdcard/test.ubm.gmm", "--tInputMask=/sdcard/test.speaker.gmm", "--sOutputMask=/sdcard/test.ident.seg", "--sSetLabel=add", "speaker"};
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("MFCC", "Computing features...");
+            MfccMaker Mfcc = new MfccMaker(CONFIG_FILE, AUDIO_FILE, MFCC_FILE, UEM_FILE);
+            Mfcc.produceFeatures();
+
+            try {
+                Log.d("Train", "Starting identification");
+                MScore.main(identifyParams);
+                Log.d("Train", "identification complete");
+            } catch (DiarizationException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            Context context = getApplicationContext();
+            CharSequence text = "Finished training";
+            int duration = Toast.LENGTH_SHORT;
+            Toast.makeText(context, text, duration).show();
+        }
     }
 
     @Override
@@ -160,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
     public void onResume()
     {
         super.onResume();
-        _audioRecord.startRecording();
+        //_audioRecord.startRecording();
 
         _task = new MonitorAudioTask();
         _task.execute(null, null, null);
@@ -172,7 +363,20 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
 
         _task.cancel(true);
-        _audioRecord.stop();
+        //_audioRecord.stop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (recorderWrapper != null) {
+            recorderWrapper.release();
+        }
+
+        if (audioPlayer != null) {
+            audioPlayer.release();
+        }
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -213,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if (inNewSampleRecordingState)
                     {
-                        alize.addNewAudioSample(trimmedBuffer);
+                        //alize.addNewAudioSample(trimmedBuffer);
 
                         //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
                         //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
