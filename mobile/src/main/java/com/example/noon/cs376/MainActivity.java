@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Audio Settings
     public static final int AUDIO_SOURCE = MediaRecorder.AudioSource.VOICE_RECOGNITION;
-    public static final int SAMPLE_RATE = 16000;
+    public static final int SAMPLE_RATE = 44100;
     public static final int CHANNELS_IN = AudioFormat.CHANNEL_IN_MONO;
     public static final int CHANNELS_OUT = AudioFormat.CHANNEL_CONFIGURATION_MONO;
     public static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
@@ -80,6 +80,11 @@ public class MainActivity extends AppCompatActivity {
 
     MainDatabase db;
     MainDao dao;
+
+    RelativeAudioParser parser;
+    FFT fft;
+    private static final int FFT_BINS = 2048;
+    int fftLoopsPerBuffer;
 
     //AlizeSpeechRecognizer alize;
 
@@ -106,15 +111,19 @@ public class MainActivity extends AppCompatActivity {
                     int duration = Toast.LENGTH_SHORT;
                     Toast.makeText(context, text, duration).show();
 
-                    new recordConvo().execute();
+                    //new recordConvo().execute();
 
+                    inNewSampleRecordingState = true;
+                    Log.d("Alize", "Recording a new sample...");
                     // Do what you want
                     return true;
                 }
                 else if(event.getAction() == MotionEvent.ACTION_UP){
-                    if (recorderWrapper != null) {
+                    /*if (recorderWrapper != null) {
                         recorderWrapper.stop();
-                    }
+                    }*/
+                    inNewSampleRecordingState = false;
+                    Log.d("Alize", "Ending new sample recording");
 
                     Context context = getApplicationContext();
                     CharSequence text = "Finished recording";
@@ -128,26 +137,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final Button trainUBMButton = findViewById(R.id.trainubm);
-        trainUBMButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Train", "Starting UBM training");
-                    new trainUBMTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                    return true;
-                }
-                return false;
-            }
-        });
-
         final Button trainButton = findViewById(R.id.train);
         trainButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
                     Log.d("Train", "Starting training");
-                    new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    parser.setBinsAsSpeaker();
+                    parser.resetCurrentBins();
+                    Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
+                    //new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     return true;
                 }
                 return false;
@@ -159,8 +158,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Identify", "Starting identification");
-                    new identifyTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
+                    Log.d("Train", "Current frequency is: " + parser.getCurrentFrequency() + " Hz");
+                    Log.d("Verification", "Verification result: " + parser.isSpeakerMatch());
+                    parser.resetCurrentBins();
                     return true;
                 }
                 return false;
@@ -185,7 +186,8 @@ public class MainActivity extends AppCompatActivity {
         try
         {
             Log.d("Init", "Setting up AudioRecord");
-            BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNELS_OUT, AUDIO_FORMAT) * 8 * MIN_BUFFER_SIZE_MULTIPLIER;
+            int tempBufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNELS_OUT, AUDIO_FORMAT) * 8 * MIN_BUFFER_SIZE_MULTIPLIER;
+            BUFFER_SIZE = 1 << ((int)(Math.log(tempBufferSize) / Math.log(2)) + 1); // ensure that buffer size is a power of two
             _audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE,
                     CHANNELS_OUT, AUDIO_FORMAT, BUFFER_SIZE);
             Log.d("Init", "AudioRecord set up successfully");
@@ -201,6 +203,11 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //screen needs to be on for it to collect data
 
+        // initialize and precompute FFT
+        fft = new FFT(FFT_BINS);
+        fftLoopsPerBuffer = BUFFER_SIZE / FFT_BINS;
+
+        parser = new RelativeAudioParser(FFT_BINS);
     }
 
     private class recordConvo extends AsyncTask<Void, Void, Void> {
@@ -256,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
 
     private class trainTask extends AsyncTask<Void, Void, Void> {
         String[] initParams = {"--trace", "--help", "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emInitMethod=copy", "--tInputMask=/sdcard/test.ubm.gmm", "--tOutputMask=/sdcard/test.init.gmm", "speaker"};
-        String[] trainParams = {"--trace", "--help",  "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emCtrl=1,5,0.01", "--varCtrl=0.01,10.0", "--tInputMask=/sdcard/test.init.gmm", "--tOutputMask=/sdcard/test.speaker.gmm", "speaker"};
+        String[] trainParams = {"--trace", "--help",  "--sInputMask=/sdcard/test.uem.seg", "--fInputMask=/sdcard/test.mfc", "--fInputDesc=sphinx,1:1:0:0:0:0,13,0:0:0", "--emCtrl=1,5,0.01", "--varCtrl=0.01,10.0", "--tInputMask=/sdcard/test.init.gmm", "--tOutputMask=/sdcard/test.speaker.gmm", "--sOutputMask=/sdcard/test.speaker.seg", "speaker"};
 
         @Override
         protected void onPreExecute() {
@@ -351,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
     public void onResume()
     {
         super.onResume();
-        //_audioRecord.startRecording();
+        _audioRecord.startRecording();
 
         _task = new MonitorAudioTask();
         _task.execute(null, null, null);
@@ -363,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
 
         _task.cancel(true);
-        //_audioRecord.stop();
+        _audioRecord.stop();
     }
 
     @Override
@@ -417,6 +424,20 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if (inNewSampleRecordingState)
                     {
+                        double[] x, y;
+                        double[] window = fft.getWindow();
+                        int loops = (fftLoopsPerBuffer * 2) - 1;
+                        int chunkSize = FFT_BINS >> 1;
+                        for (int index = 0; index < loops; index++) {
+                            x = new double[FFT_BINS];
+                            y = new double[FFT_BINS];
+                            for (int i = 0; i < chunkSize; i++) {
+                                x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
+                                x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
+                            }
+                            fft.fft(x, y);
+                            parser.addToBins(FFT.computeMagnitude(x, y));
+                        }
                         //alize.addNewAudioSample(trimmedBuffer);
 
                         //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
