@@ -32,4 +32,5 @@ dependencies {
     annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
     compile project(':alize-release')
     compile project(path: ':alternative')
+    compile 'com.jjoe64:graphview:4.2.1'
 }
