@@ -352,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
                     //test: is the RMS above or below threshold of env noise? if so, we want to vibrate watch
                     // if not, just log time and ambient noise level
                     // todo: think about if we should log ambient noise every like x minutes instead?
-
+                    
                     if (result.speakerMatch) {
                         float upper = envNoiseLevel * TRIGGER_THRESHOLD;
                         float lower = envNoiseLevel / TRIGGER_THRESHOLD;

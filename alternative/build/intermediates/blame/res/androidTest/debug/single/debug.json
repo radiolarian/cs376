@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\layout_results.xml.flat",
+        "source": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\bundles\\debug\\res\\layout\\results.xml"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/res/merged/androidTest/debug/drawable-mdpi-v4_icon.png.flat",
+        "source": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/bundles/debug/res/drawable-mdpi-v4/icon.png"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-mdpi-v4_icon.png.flat",
+        "source": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\bundles\\debug\\res\\drawable-mdpi-v4\\icon.png"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/res/merged/androidTest/debug/drawable-hdpi-v4_icon.png.flat",
+        "source": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/bundles/debug/res/drawable-hdpi-v4/icon.png"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-ldpi-v4_icon.png.flat",
+        "source": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\bundles\\debug\\res\\drawable-ldpi-v4\\icon.png"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/res/merged/androidTest/debug/layout_main.xml.flat",
+        "source": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/bundles/debug/res/layout/main.xml"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/res/merged/androidTest/debug/drawable-ldpi-v4_icon.png.flat",
+        "source": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/bundles/debug/res/drawable-ldpi-v4/icon.png"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/res/merged/androidTest/debug/layout_results.xml.flat",
+        "source": "/Users/noon/Desktop/cs376proj/alternative/build/intermediates/bundles/debug/res/layout/results.xml"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-hdpi-v4_icon.png.flat",
+        "source": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\bundles\\debug\\res\\drawable-hdpi-v4\\icon.png"
+    },
+    {
+        "merged": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\layout_main.xml.flat",
+        "source": "/Users/noon/Desktop/cs376proj/C:\\Users\\estra\\FrontEnd\\app\\build\\intermediates\\bundles\\debug\\res\\layout\\main.xml"
+    }
+]
