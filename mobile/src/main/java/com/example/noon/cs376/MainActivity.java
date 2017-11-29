@@ -15,6 +15,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -39,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MOVING_AVG_WINDOW_SIZE = 5; //num of audio samples to determine BG vol
     private static final int FREQUENCY = 8000;
+    private static final int VIBRATION_DURATION = 400;
+    private static final int DELAY_SAMPLES_AFTER_VIBRATION = 3;
     // Audio recording + play back
 
     // Dialogs
@@ -75,7 +78,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean inNewSampleRecordingState = false;
     private boolean inTestingState = false;
     private float envNoiseLevel; //from movin avg
-    private float TRIGGER_THRESHOLD = 1.5f; //vibrate watch if x times softer/louder than env noise
+    private float TRIGGER_THRESHOLD = 2f; //vibrate watch if x times softer/louder than env noise
+    private boolean USE_WATCH_VIBRATION = false;
+    private int samplesToDelay = 0;
 
     MainDatabase db;
     MainDao dao;
@@ -299,6 +304,15 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    public void triggerVibrate()
+    {
+        // Get instance of Vibrator from current Context
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        // Vibrate for 400 milliseconds
+        v.vibrate(VIBRATION_DURATION);
+    }
+
     private class MonitorAudioTask extends AsyncTask<Void, Void, ParseResult>
     {
         @Override
@@ -317,55 +331,57 @@ public class MainActivity extends AppCompatActivity {
                 short[] trimmedBuffer = Arrays.copyOfRange(buffer, 0, bufferReadResult);
                 if (bufferReadResult > 0)
                 {
-                    if (inNewSampleRecordingState || inTestingState)
-                    {
-                        double[] x, y;
-                        double[] window = fft.getWindow();
-                        int loops = (fftLoopsPerBuffer * 2) - 1;
-                        int chunkSize = FFT_BINS >> 1;
-                        for (int index = 0; index < loops; index++) {
-                            x = new double[FFT_BINS];
-                            y = new double[FFT_BINS];
-                            for (int i = 0; i < chunkSize; i++) {
-                                x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
-                                x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
+                    if (samplesToDelay == 0) {
+                        if (inNewSampleRecordingState || inTestingState) {
+                            double[] x, y;
+                            double[] window = fft.getWindow();
+                            int loops = (fftLoopsPerBuffer * 2) - 1;
+                            int chunkSize = FFT_BINS >> 1;
+                            for (int index = 0; index < loops; index++) {
+                                x = new double[FFT_BINS];
+                                y = new double[FFT_BINS];
+                                for (int i = 0; i < chunkSize; i++) {
+                                    x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
+                                    x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
+                                }
+                                fft.fft(x, y);
+                                parser.addToBins(FFT.computeMagnitude(x, y));
                             }
-                            fft.fft(x, y);
-                            parser.addToBins(FFT.computeMagnitude(x, y));
+                            //alize.addNewAudioSample(trimmedBuffer);
+
+                            //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
+                            //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
+                            //alize.addNewAudioSample(audioBytes);
+
+                            //alize.resetAudio();
+
+                            float rms = RelativeAudioParser.RMS(trimmedBuffer);
+                            boolean speakerMatch = parser.isSpeakerMatch();
+
+                            //add result to moving average -- but only if we don't detect the speaker
+                            if (!speakerMatch) {
+                                movingavg.add(rms);
+                            } else {
+                                movingavg.clearCandidate();
+                            }
+
+                            //update env noise
+                            envNoiseLevel = movingavg.getAverage();
+
+                            //fill result
+
+                            Log.d("Test", "Speaker frequency: " + parser.getSpeakerFrequency() + ", Current frequency: " + parser.getCurrentFrequency());
+
+                            result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
+                            if (inTestingState) {
+                                parser.resetCurrentBins();
+                            }
                         }
-                        //alize.addNewAudioSample(trimmedBuffer);
-
-                        //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
-                        //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
-                        //alize.addNewAudioSample(audioBytes);
-                        
-                        //alize.resetAudio();
                     }
-                    float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                    boolean speakerMatch = parser.isSpeakerMatch();
-
-                    //add result to moving average -- but only if we don't detect the speaker
-                    if (!speakerMatch)
-                    {
-                        movingavg.add(rms);
+                    else {
+                        samplesToDelay--;
                     }
-                    else
-                    {
-                        movingavg.clearCandidate();
-                    }
-
-                    //update env noise
-                    envNoiseLevel = movingavg.getAverage();
-
-                    //fill result
-
-                    Log.d("Test", "Speaker frequency: " + parser.getSpeakerFrequency() +  ", Current frequency: " + parser.getCurrentFrequency());
-
-                    result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
-                    if (inTestingState) {
-                        parser.resetCurrentBins();
-                    }
-                   break;
+                    break;
                 }
             }
 
@@ -393,10 +409,15 @@ public class MainActivity extends AppCompatActivity {
                         if (rms >= upper || rms <= lower) {
                             //a hit!
                             //probably do speaker ID here
-
+                            samplesToDelay = DELAY_SAMPLES_AFTER_VIBRATION;
                             //vibrate the watch
-                            if (bound) {
-                                mService.sendMessage(MainService.PATH, Float.toString(result.data));
+                            if (USE_WATCH_VIBRATION) {
+                                if (bound) {
+                                    mService.sendMessage(MainService.PATH, Float.toString(result.data));
+                                }
+                            }
+                            else {
+                                triggerVibrate();
                             }
 
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
@@ -429,21 +450,19 @@ public class MainActivity extends AppCompatActivity {
 
                         }
                     }
+                    new Thread( new Runnable() {
+                        @Override
+                        public void run() {
+                            dao.insert(result);
+                        }
+                    }).start();
+                    // Insert into database
                 }
-                else
-                {
+                else {
                     str = "Error: " + result.errorCode.toString();
                     Log.d("Result", str);
 
                 }
-
-                new Thread( new Runnable() {
-                    @Override
-                    public void run() {
-                        dao.insert(result);
-                    }
-                }).start();
-                // Insert into database
             }
             else
                 Log.d("Result", "Null result");
