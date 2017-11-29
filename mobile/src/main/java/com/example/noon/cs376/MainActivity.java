@@ -31,6 +31,7 @@ import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.jjoe64.graphview.series.PointsGraphSeries;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -96,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
     //graph stuff
     LineGraphSeries<DataPoint> envNoise = new LineGraphSeries<>();
     LineGraphSeries<DataPoint> speakerVol = new LineGraphSeries<>();
+    PointsGraphSeries<DataPoint> loudIncidents = new PointsGraphSeries<>();
+    PointsGraphSeries<DataPoint> speakingIncidents = new PointsGraphSeries<>();
 
 
     //welcome message display stuff
@@ -203,11 +206,14 @@ public class MainActivity extends AppCompatActivity {
         envNoise.setColor(Color.GREEN);
         envNoise.setThickness(4);
 
+        loudIncidents.setColor(Color.RED);
+        loudIncidents.setSize(14);
+        speakingIncidents.setColor(Color.BLUE);
+        speakingIncidents.setSize(14);
+
         speakerVol.setTitle("Your Volume");
         speakerVol.setColor(Color.BLUE);
         speakerVol.setThickness(8);
-        speakerVol.setDrawDataPoints(true);
-        speakerVol.setDataPointsRadius(10);
 
         graph.setTitle(formattedDate);
 
@@ -255,6 +261,8 @@ public class MainActivity extends AppCompatActivity {
 
         graph.addSeries(envNoise);
         graph.addSeries(speakerVol);
+        graph.addSeries(speakingIncidents);
+        graph.addSeries(loudIncidents);
 
 
     }
@@ -431,8 +439,8 @@ public class MainActivity extends AppCompatActivity {
                     //graph it
                     Date timestamp = Calendar.getInstance().getTime();
                     Long time = timestamp.getTime();
-                    speakerVol.appendData(new DataPoint(time, result.data), true, 50);
-                    envNoise.appendData(new DataPoint(time, envNoiseLevel), true, 50);
+                    speakerVol.appendData(new DataPoint(time, result.data), true, 70);
+                    envNoise.appendData(new DataPoint(time, envNoiseLevel), true, 70);
 
 //                    Log.d("graph", "at time " + time + " grapphed speaker vol " + result.data + " and env noise " + envNoiseLevel);
 
@@ -455,6 +463,10 @@ public class MainActivity extends AppCompatActivity {
                                 triggerVibrate();
                             }
 
+                            //add red point to graph
+
+                            loudIncidents.appendData(new DataPoint(time, result.data), true, 30);
+
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
                             timesTriggered += 1;
                             incrementEnvironment(envNoiseLevel);
@@ -469,6 +481,8 @@ public class MainActivity extends AppCompatActivity {
 
 
                         } else {
+
+                            speakingIncidents.appendData(new DataPoint(time, result.data), true, 30);
                             Log.d("Result", "Not loud: " + result.data + "\r\n");
 
                         }
