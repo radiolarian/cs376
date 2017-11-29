@@ -57,7 +57,7 @@ public class RelativeAudioParser {
 
     public int getSpeakerFrequency()
     {
-        return speakerMode * MainActivity.SAMPLE_RATE / (numRelevantBins << 1);
+        return (int)((float) speakerMode * MainActivity.SAMPLE_RATE / (numRelevantBins << 1));
     }
 
     public int getCurrentFrequency()
