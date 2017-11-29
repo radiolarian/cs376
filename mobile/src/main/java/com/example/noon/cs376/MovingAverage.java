@@ -35,19 +35,44 @@ package com.example.noon.cs376;
  */
 
 public class MovingAverage {
+    private static final Float tolerance = 500f;
     private Queue<Float> mWindow = new LinkedList<Float>();
+    private Queue<Float> mCandidateWindow = new LinkedList<Float>();
     private int mPeriod;
     private Float mSum = 0f;
+    private Float mCandidateSum = 0f;
 
     public MovingAverage(int period) {
         mPeriod = period;
     }
 
+    // Moving average has more complex logic under the hood
+    // When new values are added, if they are compatible with our moving average, we adjust it.
+    // Otherwise, we begin trying to fill a new moving average, and when complete with enough consecutive samples, we swap it as active
     public void add(Float value) {
-        mSum = mSum + value;
-        mWindow.add(value);
-        if (mWindow.size() > mPeriod) {
-            mSum = mSum - mWindow.remove();
+        if (Math.abs(value - getAverage()) <= tolerance)
+        {
+            mSum = mSum + value;
+            mWindow.add(value);
+            if (mWindow.size() > mPeriod) {
+                mSum = mSum - mWindow.remove();
+            }
+        }
+        else
+        {
+            if (Math.abs(value - getCandidateAverage()) <= tolerance) {
+                mCandidateSum = mCandidateSum + value;
+                mCandidateWindow.add(value);
+                if (mCandidateWindow.size() == mPeriod) {
+                    mWindow = mCandidateWindow;
+                    mSum = mCandidateSum;
+                    clearCandidate();
+                }
+            }
+            else
+            {
+                clearCandidate();
+            }
         }
     }
 
@@ -59,8 +84,23 @@ public class MovingAverage {
         return mSum / mWindow.size();
     }
 
+    public Float getCandidateAverage() {
+        if (mCandidateWindow.isEmpty()) {
+            // Use negative 1 for undefined in this case
+            return -1f;
+        }
+        return mCandidateSum / mCandidateWindow.size();
+    }
+
     public void clear() {
         mWindow.clear();
         mSum = 0f;
+        clearCandidate();
+    }
+
+    public void clearCandidate()
+    {
+        mCandidateWindow.clear();
+        mCandidateSum = 0f;
     }
 }

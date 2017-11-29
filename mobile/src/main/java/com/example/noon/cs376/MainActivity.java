@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
                     //new recordConvo().execute();
 
+                    inTestingState = false;
                     inNewSampleRecordingState = true;
                     Log.d("Alize", "Recording a new sample...");
                     // Do what you want
@@ -361,11 +362,17 @@ public class MainActivity extends AppCompatActivity {
                     {
                         movingavg.add(rms);
                     }
+                    else
+                    {
+                        movingavg.clearCandidate();
+                    }
 
                     //update env noise
                     envNoiseLevel = movingavg.getAverage();
 
                     //fill result
+
+                    Log.d("Test", "Speaker frequency: " + parser.getSpeakerFrequency() +  ", Current frequency: " + parser.getCurrentFrequency());
 
                     result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
                     if (inTestingState) {
