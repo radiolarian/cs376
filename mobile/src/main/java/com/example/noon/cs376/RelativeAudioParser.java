@@ -7,12 +7,13 @@ package com.example.noon.cs376;
 public class RelativeAudioParser {
     private final static double FREQUENCY_DISTANCE_THRESHOLD = 3; // the allowable distance in hertz is this number * sample_rate / num_fft_bins
 
-    int speakerMode;
-    int numRelevantBins;
-    double[] speakerBins;
-    double[] currentBins;
+    static int speakerMode;
+    static int numRelevantBins;
+    static double[] speakerBins;
+    static double[] currentBins;
+    static boolean speakerFrequencySet = false;
 
-    public void addToBins(double[] f)
+    public static void addToBins(double[] f)
     {
         for (int i = 0; i < numRelevantBins; i++)
         {
@@ -20,7 +21,12 @@ public class RelativeAudioParser {
         }
     }
 
-    public void setBinsAsSpeaker()
+    public static boolean isSpeakerFrequencySet()
+    {
+        return speakerFrequencySet;
+    }
+
+    public static void setBinsAsSpeaker()
     {
         speakerBins = currentBins;
         speakerMode = 0;
@@ -33,14 +39,15 @@ public class RelativeAudioParser {
                 speakerMode = i;
             }
         }
+        speakerFrequencySet = true;
     }
 
-    public void resetCurrentBins()
+    public static void resetCurrentBins()
     {
         currentBins = new double[numRelevantBins];
     }
 
-    public boolean isSpeakerMatch()
+    public static boolean isSpeakerMatch()
     {
         int currentMode = 0;
         double maxBin = 0;
@@ -55,12 +62,12 @@ public class RelativeAudioParser {
         return (Math.abs(currentMode - speakerMode) <= FREQUENCY_DISTANCE_THRESHOLD);
     }
 
-    public int getSpeakerFrequency()
+    public static int getSpeakerFrequency()
     {
         return (int)((float) speakerMode * MainActivity.SAMPLE_RATE / (numRelevantBins << 1));
     }
 
-    public int getCurrentFrequency()
+    public static int getCurrentFrequency()
     {
         int currentMode = 0;
         double maxBin = 0;
@@ -75,6 +82,13 @@ public class RelativeAudioParser {
         return currentMode * MainActivity.SAMPLE_RATE / (numRelevantBins << 1);
     }
 
+    public static void Init(int bufferSize)
+    {
+        numRelevantBins = bufferSize >> 1;
+        speakerBins = new double[numRelevantBins];
+        currentBins = new double[numRelevantBins];
+    }
+
     public RelativeAudioParser(int bufferSize)
     {
         numRelevantBins = bufferSize >> 1;
@@ -82,7 +96,7 @@ public class RelativeAudioParser {
         currentBins = new double[numRelevantBins];
     }
 
-    public void logCurrentBins()
+    public static void logCurrentBins()
     {
         for (double d : currentBins)
         {

@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
     MainDao dao;
 
     MovingAverage movingavg;
-    RelativeAudioParser parser;
+    //RelativeAudioParser parser;
     FFT fft;
     private static final int FFT_BINS = 2048;
     int fftLoopsPerBuffer;
@@ -186,7 +186,8 @@ public class MainActivity extends AppCompatActivity {
         fft = new FFT(FFT_BINS);
         fftLoopsPerBuffer = BUFFER_SIZE / FFT_BINS;
 
-        parser = new RelativeAudioParser(FFT_BINS);
+        RelativeAudioParser.Init(FFT_BINS);
+        //parser = new RelativeAudioParser(FFT_BINS);
         //create a moving avg filter
         movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
 
@@ -335,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
 
             while (true)
             {
-                if (isCancelled())
+                if (isCancelled() || !RelativeAudioParser.isSpeakerFrequencySet())
                     break;
 
                 bufferReadResult = _audioRecord.read(buffer, 0, BUFFER_SIZE);
@@ -343,51 +344,48 @@ public class MainActivity extends AppCompatActivity {
                 if (bufferReadResult > 0)
                 {
                     if (samplesToDelay == 0) {
-                        if (inNewSampleRecordingState || inTestingState) {
-                            double[] x, y;
-                            double[] window = fft.getWindow();
-                            int loops = (fftLoopsPerBuffer * 2) - 1;
-                            int chunkSize = FFT_BINS >> 1;
-                            for (int index = 0; index < loops; index++) {
-                                x = new double[FFT_BINS];
-                                y = new double[FFT_BINS];
-                                for (int i = 0; i < chunkSize; i++) {
-                                    x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
-                                    x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
-                                }
-                                fft.fft(x, y);
-                                parser.addToBins(FFT.computeMagnitude(x, y));
+                        double[] x, y;
+                        double[] window = fft.getWindow();
+                        int loops = (fftLoopsPerBuffer * 2) - 1;
+                        int chunkSize = FFT_BINS >> 1;
+                        for (int index = 0; index < loops; index++) {
+                            x = new double[FFT_BINS];
+                            y = new double[FFT_BINS];
+                            for (int i = 0; i < chunkSize; i++) {
+                                x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
+                                x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
                             }
-                            //alize.addNewAudioSample(trimmedBuffer);
-
-                            //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
-                            //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
-                            //alize.addNewAudioSample(audioBytes);
-
-                            //alize.resetAudio();
-
-                            float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                            boolean speakerMatch = parser.isSpeakerMatch();
-
-                            //add result to moving average -- but only if we don't detect the speaker
-                            if (!speakerMatch) {
-                                movingavg.add(rms);
-                            } else {
-                                movingavg.clearCandidate();
-                            }
-
-                            //update env noise
-                            envNoiseLevel = movingavg.getAverage();
-
-                            //fill result
-
-                            Log.d("Test", "Speaker frequency: " + parser.getSpeakerFrequency() + ", Current frequency: " + parser.getCurrentFrequency());
-
-                            result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
-                            if (inTestingState) {
-                                parser.resetCurrentBins();
-                            }
+                            fft.fft(x, y);
+                            RelativeAudioParser.addToBins(FFT.computeMagnitude(x, y));
                         }
+                        //alize.addNewAudioSample(trimmedBuffer);
+
+                        //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
+                        //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
+                        //alize.addNewAudioSample(audioBytes);
+
+                        //alize.resetAudio();
+
+                        float rms = RelativeAudioParser.RMS(trimmedBuffer);
+                        boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
+
+                        //add result to moving average -- but only if we don't detect the speaker
+                        if (!speakerMatch) {
+                            movingavg.add(rms);
+                        } else {
+                            movingavg.clearCandidate();
+                        }
+
+                        //update env noise
+                        envNoiseLevel = movingavg.getAverage();
+
+                        //fill result
+
+                        Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
+
+                        result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
+                        RelativeAudioParser.resetCurrentBins();
+                        
                     }
                     else {
                         samplesToDelay--;

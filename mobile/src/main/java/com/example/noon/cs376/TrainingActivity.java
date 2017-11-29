@@ -88,7 +88,7 @@ public class TrainingActivity extends AppCompatActivity {
     MainDao dao;
 
     MovingAverage movingavg;
-    RelativeAudioParser parser;
+    //RelativeAudioParser parser;
     FFT fft;
     private static final int FFT_BINS = 2048;
     int fftLoopsPerBuffer;
@@ -148,9 +148,9 @@ public class TrainingActivity extends AppCompatActivity {
 
                     // Train
                     Log.d("Train", "Starting training");
-                    parser.setBinsAsSpeaker();
-                    parser.resetCurrentBins();
-                    Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
+                    RelativeAudioParser.setBinsAsSpeaker();
+                    RelativeAudioParser.resetCurrentBins();
+                    Log.d("Train", "Speaker frequency is: " + RelativeAudioParser.getSpeakerFrequency() + " Hz");
                     //new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
                     //Advance to History Screen
@@ -188,7 +188,7 @@ public class TrainingActivity extends AppCompatActivity {
         fft = new FFT(FFT_BINS);
         fftLoopsPerBuffer = BUFFER_SIZE / FFT_BINS;
 
-        parser = new RelativeAudioParser(FFT_BINS);
+        //parser = new RelativeAudioParser(FFT_BINS);
         //create a moving avg filter
         movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
 
@@ -309,7 +309,7 @@ public class TrainingActivity extends AppCompatActivity {
                                     x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
                                 }
                                 fft.fft(x, y);
-                                parser.addToBins(FFT.computeMagnitude(x, y));
+                                RelativeAudioParser.addToBins(FFT.computeMagnitude(x, y));
                             }
                             //alize.addNewAudioSample(trimmedBuffer);
 
@@ -320,7 +320,7 @@ public class TrainingActivity extends AppCompatActivity {
                             //alize.resetAudio();
 
                             float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                            boolean speakerMatch = parser.isSpeakerMatch();
+                            boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
 
                             //add result to moving average -- but only if we don't detect the speaker
                             if (!speakerMatch) {
@@ -334,11 +334,11 @@ public class TrainingActivity extends AppCompatActivity {
 
                             //fill result
 
-                            Log.d("Test", "Speaker frequency: " + parser.getSpeakerFrequency() + ", Current frequency: " + parser.getCurrentFrequency());
+                            Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
 
                             result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
                             if (inTestingState) {
-                                parser.resetCurrentBins();
+                                RelativeAudioParser.resetCurrentBins();
                             }
                         }
                     }
@@ -419,15 +419,8 @@ public class TrainingActivity extends AppCompatActivity {
                             Log.d("Result", "Not loud: " + result.data + "\r\n");
 
                         }
-
                     }
-                    new Thread( new Runnable() {
-                        @Override
-                        public void run() {
-                            dao.insert(result);
-                        }
-                    }).start();
-                    // Insert into database
+
                 }
                 else {
                     str = "Error: " + result.errorCode.toString();
