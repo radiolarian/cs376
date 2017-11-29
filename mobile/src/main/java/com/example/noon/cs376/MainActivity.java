@@ -1,5 +1,6 @@
 package com.example.noon.cs376;
 
+import android.app.Application;
 import android.app.ProgressDialog;
 import android.arch.persistence.room.Room;
 import android.content.ComponentName;
@@ -25,7 +26,9 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
@@ -187,19 +190,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final Button identifySpeakerButton = findViewById(R.id.identify_speaker);
-        identifySpeakerButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN){
-                    Log.d("Alize", "Identifying speaker");
-                    //alize.identifySpeaker();
-                    // Do what you want
-                    return true;
-                }
-                return false;
-            }
-        });
 
         // Set up audio buffer
         try
@@ -249,13 +239,55 @@ public class MainActivity extends AppCompatActivity {
         speakerVol.setDataPointsRadius(10);
 
         graph.setTitle(formattedDate);
+
+
+        graph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX) {
+                    // return the hour
+                    SimpleDateFormat sdf = new SimpleDateFormat("h:mm:ss");
+                    return sdf.format(value);
+
+                } else {
+                    return super.formatLabel(value, isValueX);
+                }
+            }
+        });
+
+        // set date label formatter
+//        graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getApplicationContext()));
+        graph.getGridLabelRenderer().setNumHorizontalLabels(4);
+//        graph.getGridLabelRenderer().setHumanRounding(false);
+
+        //current time
+
+        Calendar cal = Calendar.getInstance();
+        Date currtime = cal.getTime();
+        cal.add(Calendar.MINUTE, 1);
+        Date futuretime = cal.getTime();
+
+        Long start = currtime.getTime();
+        Long stop = futuretime.getTime();
+
+        graph.getViewport().setMinX(start);
+        graph.getViewport().setMaxX(stop);
+        Log.d("graph", "min X is" + start);
+        Log.d("graph", "max X is" + stop);
+
+        graph.getViewport().setXAxisBoundsManual(true);
+
+
+//        graph.getViewport().setYAxisBoundsManual(true);
+//        graph.getViewport().setMinY(0);
+//        graph.getViewport().setMaxY(3000);
+
+        graph.getViewport().setScalable(true);
+//        graph.getViewport().setScalableY(true);
+
         graph.addSeries(envNoise);
         graph.addSeries(speakerVol);
 
-
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinX(0);
-        graph.getViewport().setMaxX(40);
 
     }
 
@@ -415,6 +447,15 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("ParseResult", "RMS: " + result.data + ", EnvNoise: " + result.envNoise + ", isMatch: " + result.speakerMatch);
 
+                    //graph it
+                    Date timestamp = Calendar.getInstance().getTime();
+                    Long time = timestamp.getTime();
+                    speakerVol.appendData(new DataPoint(time, result.data), true, 50);
+                    envNoise.appendData(new DataPoint(time, envNoiseLevel), true, 50);
+
+                    Log.d("graph", "at time " + time + " grapphed speaker vol " + result.data + " and env noise " + envNoiseLevel);
+
+
                     if (result.speakerMatch) {
                         timestep += 1;
                         float upper = envNoiseLevel * TRIGGER_THRESHOLD;
@@ -437,35 +478,11 @@ public class MainActivity extends AppCompatActivity {
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
 
 
-
-
-                            mTimer = new Runnable() {
-                                @Override
-                                public void run() {
-                                    Date timestamp = Calendar.getInstance().getTime();
-                                    speakerVol.appendData(new DataPoint(timestep, result.data), true, 40);
-                                    envNoise.appendData(new DataPoint(timestep, envNoiseLevel), true, 40);
-                                    Log.d("graph", "logged speaker vol " + result.data + " and env noise " + envNoiseLevel);
-                                    mHandler.postDelayed(this, 9000);
-                                }
-                            };
-                            mHandler.postDelayed(mTimer, 10000);
-
-
                         } else {
                             Log.d("Result", "Not loud: " + result.data + "\r\n");
-                            mTimer = new Runnable() {
-                                @Override
-                                public void run() {
-                                    Date timestamp = Calendar.getInstance().getTime();
-                                    envNoise.appendData(new DataPoint(timestep, envNoiseLevel), true, 40);
-                                    Log.d("graph", "logged env noise " + envNoiseLevel);
-                                    mHandler.postDelayed(this, 9000);
-                                }
-                            };
-                            mHandler.postDelayed(mTimer, 10000);
 
                         }
+
                     }
                     new Thread( new Runnable() {
                         @Override
