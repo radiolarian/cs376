@@ -17,28 +17,28 @@ import java.nio.charset.StandardCharsets;
 public class WatchService extends WearableListenerService {
     /*variables for path control*/
     private static final String PATH = "/watch";
-    private static final double VIBRATION_THRESHOLD = 5000.0;
-    private static final double VIBRATION_THRESHOLD_LOUD = 15000.0;
+//    private static final double VIBRATION_THRESHOLD = 5000.0;
+//    private static final double VIBRATION_THRESHOLD_LOUD = 15000.0;
     private static final long[] vibrationPattern = {0, 250}; //wait time, on time
-    private static final long[] vibrationPatternLoud = {0, 250, 100, 500}; //wait time, on time
+    private static final long[] vibrationPatternLoud = {0, 100, 100, 100, 250, 100, 100, 100}; //wait time, on time
     final int indexInPatternToRepeat = -1;
 
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         String s = new String(messageEvent.getData());
-        Log.d("tag", s);
+//        Log.d("tag", s);
 
         if( messageEvent.getPath().equalsIgnoreCase( PATH ) ) {
             Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-            if (Double.parseDouble(s) >= VIBRATION_THRESHOLD_LOUD) {
+//            if (Double.parseDouble(s) >= VIBRATION_THRESHOLD_LOUD) {
                 vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
-                Log.d("tag", "Vibrated Loudly");
-            }
-            else if (Double.parseDouble(s) >= VIBRATION_THRESHOLD) {
-                vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
                 Log.d("tag", "Vibrated");
-            }
+//            }
+//            else if (Double.parseDouble(s) >= VIBRATION_THRESHOLD) {
+//                vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
+//                Log.d("tag", "Vibrated");
+//            }
 
         } else {
             super.onMessageReceived( messageEvent );
