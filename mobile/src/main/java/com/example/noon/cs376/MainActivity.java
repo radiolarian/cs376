@@ -447,6 +447,12 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        private void incrementEnvironment(float envNoise) {
+            if (envNoise < MODERATE_THRES) quiet_incidents += 1;
+            else if (envNoise < LOUD_THRES) moderate_incidents += 1;
+            else loud_incidents += 1;
+        }
+
         @Override
         protected void onPostExecute(final ParseResult result)
         {
@@ -491,6 +497,7 @@ public class MainActivity extends AppCompatActivity {
 
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
                             timesTriggered += 1;
+                            incrementEnvironment(envNoiseLevel);
 
                             //edit the textview
                             TextView welcome = findViewById(R.id.welcome_msg);
