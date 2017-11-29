@@ -29,8 +29,6 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -78,7 +76,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean inNewSampleRecordingState = false;
     private boolean inTestingState = false;
     private float envNoiseLevel; //from movin avg
-    private float TRIGGER_THRESHOLD = 2f; //vibrate watch if x times softer/louder than env noise
+    private float LOUD_RATIO_THRESHOLD = 2.2f; //vibrate watch if x times softer/louder than env noise
+    private float LOUD_MINIMUM_TRESHOLD = 800f;
     private boolean USE_WATCH_VIBRATION = false;
     private int samplesToDelay = 0;
 
@@ -403,10 +402,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("ParseResult", "RMS: " + result.data + ", EnvNoise: " + result.envNoise + ", isMatch: " + result.speakerMatch);
 
                     if (result.speakerMatch) {
-                        float upper = envNoiseLevel * TRIGGER_THRESHOLD;
-                        float lower = envNoiseLevel / TRIGGER_THRESHOLD;
+                        float upper = envNoiseLevel * LOUD_RATIO_THRESHOLD;
                         float rms = result.data;
-                        if (rms >= upper || rms <= lower) {
+                        if (rms >= upper && rms >= LOUD_MINIMUM_TRESHOLD) {
                             //a hit!
                             //probably do speaker ID here
                             samplesToDelay = DELAY_SAMPLES_AFTER_VIBRATION;

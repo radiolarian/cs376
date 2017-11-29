@@ -5,7 +5,7 @@ package com.example.noon.cs376;
  */
 
 public class RelativeAudioParser {
-    private final static double FREQUENCY_DISTANCE_THRESHOLD = 2; // the allowable distance in hertz is this number * sample_rate / num_fft_bins
+    private final static double FREQUENCY_DISTANCE_THRESHOLD = 3; // the allowable distance in hertz is this number * sample_rate / num_fft_bins
 
     int speakerMode;
     int numRelevantBins;
@@ -80,6 +80,15 @@ public class RelativeAudioParser {
         numRelevantBins = bufferSize >> 1;
         speakerBins = new double[numRelevantBins];
         currentBins = new double[numRelevantBins];
+    }
+
+    public void logCurrentBins()
+    {
+        for (double d : currentBins)
+        {
+            System.out.println(d);
+        }
+        System.out.println();
     }
 
     // Returns the RMS value as a float for an array of values
