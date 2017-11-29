@@ -24,8 +24,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
@@ -197,7 +199,17 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-
+        //for vibration boolean
+        ToggleButton toggle = findViewById(R.id.vib_mode);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    USE_WATCH_VIBRATION = true;
+                } else {
+                    USE_WATCH_VIBRATION = false;
+                }
+            }
+        });
 
         // Set up audio buffer
         try

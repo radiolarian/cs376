@@ -6,32 +6,6 @@
     android:layout_height="match_parent"
     tools:context="com.example.noon.cs376.MainActivity">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <Button
-            android:id="@+id/add_sample"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Record (Hold)"
-            android:layout_marginTop="12dp" />
-
-        <Button
-            android:id="@+id/train"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Train" />
-
-        <Button
-            android:id="@+id/test_model"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Test" />
-    </LinearLayout>
 
     <LinearLayout
         android:layout_marginTop="65dp"
@@ -57,5 +31,38 @@
     </LinearLayout>
 
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/add_sample"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Record (Hold)"
+            android:layout_marginTop="12dp" />
+
+        <Button
+            android:id="@+id/train"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Train" />
+
+        <Button
+            android:id="@+id/test_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Test" />
+        <ToggleButton
+            android:id="@+id/vib_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Vibrate Watch" />
+
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
