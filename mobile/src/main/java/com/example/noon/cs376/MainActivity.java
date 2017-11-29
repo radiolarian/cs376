@@ -13,6 +13,7 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -29,7 +30,10 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -81,6 +85,12 @@ public class MainActivity extends AppCompatActivity {
     FFT fft;
     private static final int FFT_BINS = 2048;
     int fftLoopsPerBuffer;
+
+    //graph stuff
+    LineGraphSeries<DataPoint> envNoise = new LineGraphSeries<>();
+    LineGraphSeries<DataPoint> speakerVol = new LineGraphSeries<>();
+    private final Handler mHandler = new Handler();
+    private Runnable mTimer;
 
     //AlizeSpeechRecognizer alize;
 
@@ -213,16 +223,21 @@ public class MainActivity extends AppCompatActivity {
         //create a moving avg filter
         movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
 
-        //init graph TODO replace this
-        GraphView graph = (GraphView) findViewById(R.id.graph);
-        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0, 1),
-                new DataPoint(1, 5),
-                new DataPoint(2, 3),
-                new DataPoint(3, 2),
-                new DataPoint(4, 6)
-        });
-        graph.addSeries(series);
+        //init graph
+        GraphView graph = findViewById(R.id.graph);
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
+        String formattedDate = df.format(c.getTime());
+
+        graph.setTitle(formattedDate);
+        graph.addSeries(envNoise);
+        graph.addSeries(speakerVol);
+
+
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(0);
+        graph.getViewport().setMaxX(40);
 
     }
 
@@ -262,6 +277,8 @@ public class MainActivity extends AppCompatActivity {
         _task.cancel(true);
         _audioRecord.stop();
         movingavg.clear();
+
+//        mHandler.removeCallbacks(mTimer); //??? maybe
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -382,10 +399,33 @@ public class MainActivity extends AppCompatActivity {
                                 mService.sendMessage(MainService.PATH, Float.toString(result.data));
                             }
 
-                            Log.d("Result", "Over/under thres!" + result.data + "\r\n");
+                            Log.d("Result", "LOUD: " + result.data + "\r\n");
+
+                            mTimer = new Runnable() {
+                                @Override
+                                public void run() {
+                                    Date timestamp = Calendar.getInstance().getTime();
+                                    speakerVol.appendData(new DataPoint(timestamp, result.data), true, 40);
+                                    envNoise.appendData(new DataPoint(timestamp, envNoiseLevel), true, 40);
+
+                                    mHandler.postDelayed(this, 200);
+                                }
+                            };
+                            mHandler.postDelayed(mTimer, 1000);
+
 
                         } else {
-                            //TODO debate this w team - should we send empty or just send val? (if send val probs need a boolean entry then)
+                            Log.d("Result", "Not loud: " + result.data + "\r\n");
+                            mTimer = new Runnable() {
+                                @Override
+                                public void run() {
+                                    Date timestamp = Calendar.getInstance().getTime();
+                                    envNoise.appendData(new DataPoint(timestamp, envNoiseLevel), true, 40);
+
+                                    mHandler.postDelayed(this, 200);
+                                }
+                            };
+                            mHandler.postDelayed(mTimer, 1000);
 
                         }
                     }
