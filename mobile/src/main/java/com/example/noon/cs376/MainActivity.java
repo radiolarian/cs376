@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -91,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     LineGraphSeries<DataPoint> speakerVol = new LineGraphSeries<>();
     private final Handler mHandler = new Handler();
     private Runnable mTimer;
+    private int timestep = 0;
 
     //AlizeSpeechRecognizer alize;
 
@@ -229,6 +231,17 @@ public class MainActivity extends AppCompatActivity {
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
         String formattedDate = df.format(c.getTime());
 
+
+        envNoise.setTitle("Environmental Noise");
+        envNoise.setColor(Color.GREEN);
+        envNoise.setThickness(4);
+
+        speakerVol.setTitle("Your Volume");
+        speakerVol.setColor(Color.BLUE);
+        speakerVol.setThickness(8);
+        speakerVol.setDrawDataPoints(true);
+        speakerVol.setDataPointsRadius(10);
+
         graph.setTitle(formattedDate);
         graph.addSeries(envNoise);
         graph.addSeries(speakerVol);
@@ -277,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
         _audioRecord.stop();
         movingavg.clear();
 
-//        mHandler.removeCallbacks(mTimer); //??? maybe
+        mHandler.removeCallbacks(mTimer); //??? maybe
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -380,10 +393,11 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("ParseResult", "RMS: " + result.data + ", EnvNoise: " + result.envNoise + ", isMatch: " + result.speakerMatch);
 
                     if (result.speakerMatch) {
+                        timestep += 1;
                         float upper = envNoiseLevel * TRIGGER_THRESHOLD;
                         float lower = envNoiseLevel / TRIGGER_THRESHOLD;
                         float rms = result.data;
-                        if (rms >= upper || rms <= lower) {
+                        if ((rms >= upper || rms <= lower) && envNoiseLevel > 0) {
                             //a hit!
                             //probably do speaker ID here
 
@@ -394,17 +408,20 @@ public class MainActivity extends AppCompatActivity {
 
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
 
+
+
+
                             mTimer = new Runnable() {
                                 @Override
                                 public void run() {
                                     Date timestamp = Calendar.getInstance().getTime();
-                                    speakerVol.appendData(new DataPoint(timestamp, result.data), true, 40);
-                                    envNoise.appendData(new DataPoint(timestamp, envNoiseLevel), true, 40);
-
-                                    mHandler.postDelayed(this, 200);
+                                    speakerVol.appendData(new DataPoint(timestep, result.data), true, 40);
+                                    envNoise.appendData(new DataPoint(timestep, envNoiseLevel), true, 40);
+                                    Log.d("graph", "logged speaker vol " + result.data + " and env noise " + envNoiseLevel);
+                                    mHandler.postDelayed(this, 9000);
                                 }
                             };
-                            mHandler.postDelayed(mTimer, 1000);
+                            mHandler.postDelayed(mTimer, 10000);
 
 
                         } else {
@@ -413,12 +430,12 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     Date timestamp = Calendar.getInstance().getTime();
-                                    envNoise.appendData(new DataPoint(timestamp, envNoiseLevel), true, 40);
-
-                                    mHandler.postDelayed(this, 200);
+                                    envNoise.appendData(new DataPoint(timestep, envNoiseLevel), true, 40);
+                                    Log.d("graph", "logged env noise " + envNoiseLevel);
+                                    mHandler.postDelayed(this, 9000);
                                 }
                             };
-                            mHandler.postDelayed(mTimer, 1000);
+                            mHandler.postDelayed(mTimer, 10000);
 
                         }
                     }
