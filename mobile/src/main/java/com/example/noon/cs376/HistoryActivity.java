@@ -37,7 +37,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity {
+public class HistoryActivity extends AppCompatActivity {
 
     private static final int MOVING_AVG_WINDOW_SIZE = 5; //num of audio samples to determine BG vol
     private static final int FREQUENCY = 8000;
@@ -123,13 +123,72 @@ public class MainActivity extends AppCompatActivity {
         dao = db.mainDao();
 
         //link the buttons
-        final Button trainAppButton = findViewById(R.id.get_started);
-        trainAppButton.setOnTouchListener(new View.OnTouchListener() {
+        final Button addSampleButton = findViewById(R.id.add_sample);
+        addSampleButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Context context = getApplicationContext();
+                    CharSequence text = "Now recording";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
 
-                    startActivity(new Intent(getApplicationContext(),TrainingActivity.class));
+                    //new recordConvo().execute();
+
+                    inTestingState = false;
+                    inNewSampleRecordingState = true;
+                    Log.d("Alize", "Recording a new sample...");
+                    // Do what you want
+                    return true;
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP){
+                    /*if (recorderWrapper != null) {
+                        recorderWrapper.stop();
+                    }*/
+                    inNewSampleRecordingState = false;
+                    Log.d("Alize", "Ending new sample recording");
+
+                    Context context = getApplicationContext();
+                    CharSequence text = "Finished recording";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                    // Do what you want
+                    return true;
+                }
+
+                return false;
+            }
+        });
+
+        final Button trainButton = findViewById(R.id.train);
+        trainButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Log.d("Train", "Starting training");
+                    parser.setBinsAsSpeaker();
+                    parser.resetCurrentBins();
+                    Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
+                    //new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        final Button testButton = findViewById(R.id.test_model);
+        testButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    /*
+                    Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
+                    Log.d("Train", "Current frequency is: " + parser.getCurrentFrequency() + " Hz");
+                    Log.d("Verification", "Verification result: " + parser.isSpeakerMatch());
+                    parser.resetCurrentBins();
+                    */
+
+                    inTestingState = true;
 
                     return true;
                 }

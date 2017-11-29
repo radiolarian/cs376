@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -27,6 +27,17 @@
                 <!-- TODO CHECK THIS DEPRICATION?? ugh -->
             </intent-filter>
         </service>
+
+        <activity
+            android:name=".LearnMoreActivity"
+            android:label="@string/title_activity_learn_more"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".TrainingActivity"
+            android:label="@string/title_activity_training"
+            android:theme="@style/AppTheme.NoActionBar">
+
+        </activity>
     </application>
 
 </manifest>

@@ -37,7 +37,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MainActivity extends AppCompatActivity {
+public class TrainingActivity extends AppCompatActivity {
 
     private static final int MOVING_AVG_WINDOW_SIZE = 5; //num of audio samples to determine BG vol
     private static final int FREQUENCY = 8000;
@@ -105,8 +105,6 @@ public class MainActivity extends AppCompatActivity {
     private int loud_incidents = 0;
     private static final float MODERATE_THRES = 5000;
     private static final float LOUD_THRES = 10000;
-    private String welcomeMsg = "Today, you spoke too loudly ";
-    private String welcomeMsg2 = " times, mostly in ";
 
     //AlizeSpeechRecognizer alize;
 
@@ -115,49 +113,53 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        // Create database
-        db = Room.databaseBuilder(getApplicationContext(),
-                MainDatabase.class, "database-name").fallbackToDestructiveMigration().build();
-        dao = db.mainDao();
+        setContentView(R.layout.activity_training);
 
         //link the buttons
-        final Button trainAppButton = findViewById(R.id.get_started);
-        trainAppButton.setOnTouchListener(new View.OnTouchListener() {
+        final Button recordButton = findViewById(R.id.record);
+        recordButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    Context context = getApplicationContext();
+                    CharSequence text = "Now recording";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
 
-                    startActivity(new Intent(getApplicationContext(),TrainingActivity.class));
+                    //new recordConvo().execute();
+
+                    inTestingState = false;
+                    inNewSampleRecordingState = true;
+                    Log.d("Alize", "Recording a new sample...");
+                    // Do what you want
+                    return true;
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP){
+                    /*if (recorderWrapper != null) {
+                        recorderWrapper.stop();
+                    }*/
+                    inNewSampleRecordingState = false;
+                    Log.d("Alize", "Ending new sample recording");
+
+                    Context context = getApplicationContext();
+                    CharSequence text = "Finished recording";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+
+                    // Train
+                    Log.d("Train", "Starting training");
+                    parser.setBinsAsSpeaker();
+                    parser.resetCurrentBins();
+                    Log.d("Train", "Speaker frequency is: " + parser.getSpeakerFrequency() + " Hz");
+                    //new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+                    //Advance to History Screen
+                    startActivity(new Intent(getApplicationContext(),MainActivity.class));
 
                     return true;
                 }
+
                 return false;
-            }
-        });
-
-        final Button learnMoreButton = findViewById(R.id.learn_more);
-        learnMoreButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN){
-
-                    startActivity(new Intent(getApplicationContext(),LearnMoreActivity.class));
-
-                    return true;
-                }
-                return false;
-            }
-        });        //for vibration boolean
-        ToggleButton toggle = findViewById(R.id.vib_mode);
-        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    USE_WATCH_VIBRATION = true;
-                } else {
-                    USE_WATCH_VIBRATION = false;
-                }
             }
         });
 
@@ -190,8 +192,6 @@ public class MainActivity extends AppCompatActivity {
         //create a moving avg filter
         movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
 
-        //init graph
-        GraphView graph = findViewById(R.id.graph);
 
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
@@ -207,53 +207,6 @@ public class MainActivity extends AppCompatActivity {
         speakerVol.setThickness(8);
         speakerVol.setDrawDataPoints(true);
         speakerVol.setDataPointsRadius(10);
-
-        graph.setTitle(formattedDate);
-
-
-        graph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
-            @Override
-            public String formatLabel(double value, boolean isValueX) {
-                if (isValueX) {
-                    // return the hour
-                    SimpleDateFormat sdf = new SimpleDateFormat("h:mm:ss");
-                    return sdf.format(value);
-
-                } else {
-                    return super.formatLabel(value, isValueX);
-                }
-            }
-        });
-
-        // set date label formatter
-//        graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getApplicationContext()));
-        graph.getGridLabelRenderer().setNumHorizontalLabels(3);
-//        graph.getGridLabelRenderer().setHumanRounding(false);
-
-        //current time
-
-        Calendar cal = Calendar.getInstance();
-        Date currtime = cal.getTime();
-        cal.add(Calendar.MINUTE, 1);
-        Date futuretime = cal.getTime();
-
-        Long start = currtime.getTime();
-        Long stop = futuretime.getTime();
-
-        graph.getViewport().setMinX(start);
-        graph.getViewport().setMaxX(stop);
-        graph.getViewport().setXAxisBoundsManual(true);
-
-
-//        graph.getViewport().setYAxisBoundsManual(true);
-//        graph.getViewport().setMinY(0);
-//        graph.getViewport().setMaxY(3000);
-
-        graph.getViewport().setScalable(true);
-//        graph.getViewport().setScalableY(true);
-
-        graph.addSeries(envNoise);
-        graph.addSeries(speakerVol);
 
 
     }
@@ -460,14 +413,6 @@ public class MainActivity extends AppCompatActivity {
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
                             timesTriggered += 1;
                             incrementEnvironment(envNoiseLevel);
-
-                            //edit the textview
-                            TextView welcome = findViewById(R.id.welcome_msg);
-                            if (timesTriggered == 1) {
-                                welcome.setText("Today, you spoke too loudly 1 time in a " + calculateCommonEnvironment() + " environment.");
-                            } else {
-                                welcome.setText("Today, you spoke too loudly " + timesTriggered + " times in a " + calculateCommonEnvironment() + " environment.");
-                            }
 
 
                         } else {

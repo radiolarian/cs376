@@ -7,6 +7,15 @@
     tools:context="com.example.noon.cs376.MainActivity">
 
 
+    <Button
+        android:id="@+id/learn_more"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Learn More"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="430dp" />
+
     <LinearLayout
         android:layout_marginTop="65dp"
         android:orientation="vertical"
@@ -37,18 +46,25 @@
         android:layout_height="match_parent">
 
         <Button
-            android:id="@+id/get_started"
+            android:id="@+id/add_sample"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Train App" />
+            android:text="Record (Hold)"
+            android:layout_marginTop="12dp" />
 
         <Button
-            android:id="@+id/learn_more"
+            android:id="@+id/train"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Learn More" />
+            android:text="Train" />
+
+        <Button
+            android:id="@+id/test_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Test" />
 
         <ToggleButton
             android:id="@+id/vib_mode"
