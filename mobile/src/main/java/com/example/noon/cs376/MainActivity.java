@@ -24,6 +24,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jjoe64.graphview.DefaultLabelFormatter;
@@ -97,9 +98,17 @@ public class MainActivity extends AppCompatActivity {
     //graph stuff
     LineGraphSeries<DataPoint> envNoise = new LineGraphSeries<>();
     LineGraphSeries<DataPoint> speakerVol = new LineGraphSeries<>();
-    private final Handler mHandler = new Handler();
-    private Runnable mTimer;
-    private int timestep = 0;
+
+
+    //welcome message display stuff
+    private int timesTriggered = 0;
+    private int quiet_incidents = 0;
+    private int moderate_incidents = 0;
+    private int loud_incidents = 0;
+    private static final float MODERATE_THRES = 5000;
+    private static final float LOUD_THRES = 10000;
+    private String welcomeMsg = "Today, you spoke too loudly ";
+    private String welcomeMsg2 = " times, mostly in ";
 
     //AlizeSpeechRecognizer alize;
 
@@ -256,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
 
         // set date label formatter
 //        graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getApplicationContext()));
-        graph.getGridLabelRenderer().setNumHorizontalLabels(4);
+        graph.getGridLabelRenderer().setNumHorizontalLabels(3);
 //        graph.getGridLabelRenderer().setHumanRounding(false);
 
         //current time
@@ -271,9 +280,6 @@ public class MainActivity extends AppCompatActivity {
 
         graph.getViewport().setMinX(start);
         graph.getViewport().setMaxX(stop);
-        Log.d("graph", "min X is" + start);
-        Log.d("graph", "max X is" + stop);
-
         graph.getViewport().setXAxisBoundsManual(true);
 
 
@@ -327,7 +333,6 @@ public class MainActivity extends AppCompatActivity {
         _audioRecord.stop();
         movingavg.clear();
 
-        mHandler.removeCallbacks(mTimer); //??? maybe
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
@@ -432,9 +437,20 @@ public class MainActivity extends AppCompatActivity {
             return result;
         }
 
+        private String calculateCommonEnvironment() {
+            if (moderate_incidents >= quiet_incidents  && moderate_incidents >= loud_incidents) {
+                return "moderately loud";
+            } else if (loud_incidents > moderate_incidents) {
+                return "loud";
+            } else {
+                return "quiet";
+            }
+        }
+
         @Override
         protected void onPostExecute(final ParseResult result)
         {
+
             if (result != null)
             {
                 String str;
@@ -452,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
                     speakerVol.appendData(new DataPoint(time, result.data), true, 50);
                     envNoise.appendData(new DataPoint(time, envNoiseLevel), true, 50);
 
-                    Log.d("graph", "at time " + time + " grapphed speaker vol " + result.data + " and env noise " + envNoiseLevel);
+//                    Log.d("graph", "at time " + time + " grapphed speaker vol " + result.data + " and env noise " + envNoiseLevel);
 
 
                     if (result.speakerMatch) {
@@ -474,6 +490,15 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             Log.d("Result", "LOUD: " + result.data + "\r\n");
+                            timesTriggered += 1;
+
+                            //edit the textview
+                            TextView welcome = findViewById(R.id.welcome_msg);
+                            if (timesTriggered == 1) {
+                                welcome.setText("Today, you spoke too loudly 1 time in a " + calculateCommonEnvironment() + " environment.");
+                            } else {
+                                welcome.setText("Today, you spoke too loudly " + timesTriggered + " times in a " + calculateCommonEnvironment() + " environment.");
+                            }
 
 
                         } else {
