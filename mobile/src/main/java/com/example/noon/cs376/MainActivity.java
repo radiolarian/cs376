@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean bound = false;
     private boolean inNewSampleRecordingState = false;
     private boolean inTestingState = false;
-    private float envNoiseLevel; //from movin avg
+    private float envNoiseLevel = -1; //from movin avg
     private float LOUD_RATIO_THRESHOLD = 2.2f; //vibrate watch if x times softer/louder than env noise
     private float LOUD_MINIMUM_TRESHOLD = 800f;
     private boolean USE_WATCH_VIBRATION = false;
@@ -351,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
                 short[] trimmedBuffer = Arrays.copyOfRange(buffer, 0, bufferReadResult);
                 if (bufferReadResult > 0)
                 {
-                    if (samplesToDelay == 0) {
+                    if (samplesToDelay == 0 && envNoiseLevel > 0) {
                         double[] x, y;
                         double[] window = fft.getWindow();
                         int loops = (fftLoopsPerBuffer * 2) - 1;
@@ -378,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
                         boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
 
                         //add result to moving average -- but only if we don't detect the speaker
-                        if (!speakerMatch) {
+                        if (envNoiseLevel < 0 || !speakerMatch) {
                             movingavg.add(rms);
                         } else {
                             movingavg.clearCandidate();

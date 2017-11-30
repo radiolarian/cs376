@@ -323,7 +323,7 @@ public class TrainingActivity extends AppCompatActivity {
                             boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
 
                             //add result to moving average -- but only if we don't detect the speaker
-                            if (!speakerMatch) {
+                            if (movingavg.getAverage() < 0 || !speakerMatch) {
                                 movingavg.add(rms);
                             } else {
                                 movingavg.clearCandidate();
