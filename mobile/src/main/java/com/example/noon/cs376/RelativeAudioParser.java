@@ -21,6 +21,11 @@ public class RelativeAudioParser {
         }
     }
 
+    public static double[] getCurrentBins()
+    {
+        return currentBins;
+    }
+
     public static boolean isSpeakerFrequencySet()
     {
         return speakerFrequencySet;
@@ -47,15 +52,17 @@ public class RelativeAudioParser {
         currentBins = new double[numRelevantBins];
     }
 
-    public static boolean isSpeakerMatch()
+    public static boolean isSpeakerMatch(double[] envFrequency)
     {
+        double[] subtractedBins = currentBins.clone();
         int currentMode = 0;
         double maxBin = 0;
-        for (int i = 0; i < currentBins.length; i++)
+        for (int i = 0; i < subtractedBins.length; i++)
         {
-            if (currentBins[i] > maxBin)
+            subtractedBins[i] -= envFrequency[i];
+            if (subtractedBins[i] > maxBin)
             {
-                maxBin = currentBins[i];
+                maxBin = subtractedBins[i];
                 currentMode = i;
             }
         }

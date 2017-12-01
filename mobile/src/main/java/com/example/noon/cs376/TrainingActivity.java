@@ -322,6 +322,12 @@ public class TrainingActivity extends AppCompatActivity {
                             float rms = RelativeAudioParser.RMS(trimmedBuffer);
                             boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
 
+
+
+
+                            /* TODO HERE: For both training and main activity, we should be recording the background noise and storing its FFT, then substracting the FFT from the FFT of the speaker*/
+
+
                             //add result to moving average -- but only if we don't detect the speaker
                             if (movingavg.getAverage() < 0 || !speakerMatch) {
                                 movingavg.add(rms);
