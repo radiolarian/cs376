@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean inNewSampleRecordingState = false;
     private boolean inTestingState = false;
     private float envNoiseLevel = -1; //from movin avg
+    private float envFrequency = 0;
     private float LOUD_RATIO_THRESHOLD = 2.2f; //vibrate watch if x times softer/louder than env noise
     private float LOUD_MINIMUM_TRESHOLD = 800f;
     private boolean USE_WATCH_VIBRATION = false;
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
         RelativeAudioParser.Init(FFT_BINS);
         //parser = new RelativeAudioParser(FFT_BINS);
         //create a moving avg filter
-        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
+        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE, FFT_BINS);
 
         //init graph
         GraphView graph = findViewById(R.id.graph);
@@ -344,14 +345,16 @@ public class MainActivity extends AppCompatActivity {
 
             while (true)
             {
-                if (isCancelled() || !RelativeAudioParser.isSpeakerFrequencySet())
+                if (isCancelled() || !RelativeAudioParser.isSpeakerFrequencySet()) {
+                    Log.d("MainActivity", "Cancelling");
                     break;
+                }
 
                 bufferReadResult = _audioRecord.read(buffer, 0, BUFFER_SIZE);
                 short[] trimmedBuffer = Arrays.copyOfRange(buffer, 0, bufferReadResult);
                 if (bufferReadResult > 0)
                 {
-                    if (samplesToDelay == 0 && envNoiseLevel > 0) {
+                    if (samplesToDelay == 0) {
                         double[] x, y;
                         double[] window = fft.getWindow();
                         int loops = (fftLoopsPerBuffer * 2) - 1;
@@ -364,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
                                 x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
                             }
                             fft.fft(x, y);
-                            RelativeAudioParser.addToBins(FFT.computeMagnitude(x, y));
+                            RelativeAudioParser.addToBins(FFT.computeMagnitude(x,y));
                         }
                         //alize.addNewAudioSample(trimmedBuffer);
 
@@ -375,17 +378,18 @@ public class MainActivity extends AppCompatActivity {
                         //alize.resetAudio();
 
                         float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                        boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
+                        boolean speakerMatch = RelativeAudioParser.isSpeakerMatch(movingavg.getNormalizedFftBins());
 
                         //add result to moving average -- but only if we don't detect the speaker
                         if (envNoiseLevel < 0 || !speakerMatch) {
-                            movingavg.add(rms);
+                            movingavg.add(rms, RelativeAudioParser.getCurrentBins());
                         } else {
                             movingavg.clearCandidate();
                         }
 
                         //update env noise
                         envNoiseLevel = movingavg.getAverage();
+                        envFrequency = movingavg.getFrequency();
 
                         //fill result
 

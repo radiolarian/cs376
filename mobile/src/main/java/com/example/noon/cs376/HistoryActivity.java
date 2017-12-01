@@ -247,7 +247,7 @@ public class HistoryActivity extends AppCompatActivity {
 
         parser = new RelativeAudioParser(FFT_BINS);
         //create a moving avg filter
-        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
+        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE, FFT_BINS);
 
         //init graph
         GraphView graph = findViewById(R.id.graph);
@@ -426,11 +426,11 @@ public class HistoryActivity extends AppCompatActivity {
                             //alize.resetAudio();
 
                             float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                            boolean speakerMatch = parser.isSpeakerMatch();
+                            boolean speakerMatch = parser.isSpeakerMatch(movingavg.getNormalizedFftBins());
 
                             //add result to moving average -- but only if we don't detect the speaker
                             if (!speakerMatch) {
-                                movingavg.add(rms);
+                                movingavg.add(rms, RelativeAudioParser.getCurrentBins());
                             } else {
                                 movingavg.clearCandidate();
                             }

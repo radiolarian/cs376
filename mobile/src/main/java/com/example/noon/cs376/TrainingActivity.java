@@ -190,7 +190,7 @@ public class TrainingActivity extends AppCompatActivity {
 
         //parser = new RelativeAudioParser(FFT_BINS);
         //create a moving avg filter
-        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE);
+        movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE, FFT_BINS);
 
 
         Calendar c = Calendar.getInstance();
@@ -322,9 +322,15 @@ public class TrainingActivity extends AppCompatActivity {
                             float rms = RelativeAudioParser.RMS(trimmedBuffer);
                             boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
 
+
+
+
+                            /* TODO HERE: For both training and main activity, we should be recording the background noise and storing its FFT, then substracting the FFT from the FFT of the speaker*/
+
+
                             //add result to moving average -- but only if we don't detect the speaker
                             if (movingavg.getAverage() < 0 || !speakerMatch) {
-                                movingavg.add(rms);
+                                movingavg.add(rms, RelativeAudioParser.getCurrentBins());
                             } else {
                                 movingavg.clearCandidate();
                             }
@@ -333,7 +339,7 @@ public class TrainingActivity extends AppCompatActivity {
                             envNoiseLevel = movingavg.getAverage();
 
                             //fill result
-
+                            Log.d("Test","envnoiselevel: " + envNoiseLevel);
                             Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
 
                             result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
