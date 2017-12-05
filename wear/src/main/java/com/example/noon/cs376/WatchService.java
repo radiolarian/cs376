@@ -31,7 +31,8 @@ public class WatchService extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         String s = new String(messageEvent.getData());
-//        Log.d("tag", s);
+        Log.d("tag", s);
+        Log.d("path", messageEvent.getPath());
 
         if( messageEvent.getPath().equalsIgnoreCase( WOZPATH ) ) {
             Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);

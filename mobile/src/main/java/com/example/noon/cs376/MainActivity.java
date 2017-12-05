@@ -164,18 +164,21 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     USE_WATCH_VIBRATION = false;
                 }
+                Log.d("button", "Changed watch vibe to " + USE_WATCH_VIBRATION);
+
             }
         });
 
         //to disable normal vibrating if WoZ
         ToggleButton toggleWoZ = findViewById(R.id.woz_mode);
-        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        toggleWoZ.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     USE_WOZ = true;
                 } else {
                     USE_WOZ = false;
                 }
+                Log.d("button", "Changed Woz to " + USE_WOZ);
             }
         });
 
@@ -188,9 +191,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                if (USE_WATCH_VIBRATION) {
+                if (USE_WOZ) {
                     if (bound) {
                         mService.sendMessage(MainService.WOZPATH, "loud");
+                        Log.d("watch", "sent loud msg");
                     }
                 }
             }
@@ -204,9 +208,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                if (USE_WATCH_VIBRATION) {
+                if (USE_WOZ) {
                     if (bound) {
                         mService.sendMessage(MainService.WOZPATH, "soft");
+                        Log.d("watch", "sent soft msg");
+
                     }
                 }
             }
