@@ -86,10 +86,10 @@
                     android:text="SOFT"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
-                    android:layout_weight="1" />
-                    <!--android:background="@android:color/transparent"-->
-                    <!--android:textColor="@android:color/transparent"-->
-                    <!--/>-->
+                    android:layout_weight="1" 
+                    android:background="@android:color/transparent"
+                    android:textColor="@android:color/transparent"
+                    />
                 <Button
                     android:id="@+id/loudWOZ"
                     android:layout_width="0dp"
@@ -97,10 +97,10 @@
                     android:text="LOUD"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
-                    android:layout_weight="1" />
-                    <!--android:background="@android:color/transparent"-->
-                    <!--android:textColor="@android:color/transparent"-->
-                    <!--/>-->
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:textColor="@android:color/transparent"
+                    />
 
 
 

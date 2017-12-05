@@ -2,6 +2,7 @@ package com.example.noon.cs376;
 
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
+import android.util.Log;
 import android.widget.TextView;
 
 public class WatchActivity extends WearableActivity {
@@ -13,9 +14,10 @@ public class WatchActivity extends WearableActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_watch);
 
-        mTextView = (TextView) findViewById(R.id.text);
+        mTextView = findViewById(R.id.text);
 
         // Enables Always-on
         setAmbientEnabled();
+        Log.d("watch", "watch oncreate called");
     }
 }
