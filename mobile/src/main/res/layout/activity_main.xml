@@ -8,7 +8,7 @@
 
 
     <LinearLayout
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -38,7 +38,7 @@
                 android:layout_width="40dp"
                 android:layout_height="wrap_content"
                 android:text="Vibrate Watch"
-                android:textOff="P"
+                android:textOff="C"
                 android:textOn="W" />
             <ToggleButton
                 android:id="@+id/woz_mode"
@@ -119,6 +119,44 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_margin="0dp"
+                android:layout_weight="0"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="6dp"
+                android:weightSum="3">
+
+                <Button
+                    android:id="@+id/shrekConv"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:text="Shrek" />
+
+                <Button
+                    android:id="@+id/TFIOSConv"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:text="TFIOS" />
+
+                <Button
+                    android:id="@+id/PBConv"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:text="PB" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -171,7 +209,7 @@
                 <Button
                         android:id="@+id/softWOZ"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="60dp"
                         android:text="SOFT"
                         android:paddingLeft="8dp"
                         android:paddingRight="8dp"
@@ -180,7 +218,7 @@
                 <Button
                     android:id="@+id/correctWOZ"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="60dp"
                     android:text="CORRECT"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
@@ -189,7 +227,7 @@
                 <Button
                         android:id="@+id/loudWOZ"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="60dp"
                         android:text="LOUD"
                         android:paddingLeft="8dp"
                         android:paddingRight="8dp"
