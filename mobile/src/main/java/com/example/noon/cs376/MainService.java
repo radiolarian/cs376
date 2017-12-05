@@ -20,7 +20,6 @@ import com.google.android.gms.wearable.Wearable;
 public class MainService extends Service {
     /*do RMS calculations here and send them to the watch.*/
     public static final String PATH = "/watch";
-    public static final String WOZPATH = "/woz";
     private GoogleApiClient googleApiClient;
 
 

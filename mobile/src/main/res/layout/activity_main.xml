@@ -35,11 +35,11 @@
 
             <ToggleButton
                 android:id="@+id/vib_mode"
-                android:layout_width="50dp"
+                android:layout_width="40dp"
                 android:layout_height="wrap_content"
                 android:text="Vibrate Watch"
-                android:textOff="VN"
-                android:textOn="VY" />
+                android:textOff="P"
+                android:textOn="W" />
             <ToggleButton
                 android:id="@+id/woz_mode"
                 android:layout_width="65dp"
