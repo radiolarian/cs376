@@ -154,6 +154,16 @@ public class TrainingActivity extends AppCompatActivity {
                     RelativeAudioParser.setBinsAsSpeaker();
                     RelativeAudioParser.resetCurrentBins();
                     Log.d("Train", "Speaker frequency is: " + RelativeAudioParser.getSpeakerFrequency() + " Hz");
+
+                    /*
+                    System.out.print("Speaker bins are: ");
+                    double[] speakerBins = RelativeAudioParser.getSpeakerBins();
+                    for (double d : speakerBins)
+                    {
+                        System.out.print(d + " ");
+                    }
+                    System.out.println();
+                    */
                     //new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
                     //Advance to History Screen

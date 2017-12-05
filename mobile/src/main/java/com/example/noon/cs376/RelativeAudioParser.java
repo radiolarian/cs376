@@ -40,6 +40,11 @@ public class RelativeAudioParser {
         return currentBins;
     }
 
+    public static double[] getSpeakerBins()
+    {
+        return speakerBins;
+    }
+
     public static boolean isSpeakerFrequencySet()
     {
         return speakerFrequencySet;

@@ -449,6 +449,16 @@ public class MainActivity extends AppCompatActivity {
 
                         Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
 
+                        /*
+                        System.out.print("Current bins are: ");
+                        double[] currentBins = RelativeAudioParser.getCurrentBins();
+                        for (double d : currentBins)
+                        {
+                            System.out.print(d + " ");
+                        }
+                        System.out.println();
+                        */
+
                         result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
                         RelativeAudioParser.resetCurrentBins();
                         
