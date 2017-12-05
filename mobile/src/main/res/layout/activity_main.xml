@@ -35,9 +35,18 @@
 
             <ToggleButton
                 android:id="@+id/vib_mode"
-                android:layout_width="wrap_content"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
-                android:text="Vibrate Watch" />
+                android:text="Vibrate Watch"
+                android:textOff="VN"
+                android:textOn="VY" />
+            <ToggleButton
+                android:id="@+id/woz_mode"
+                android:layout_width="65dp"
+                android:layout_height="wrap_content"
+                android:text="WoZ Mode"
+                android:textOff="WozN"
+                android:textOn="WozY" />
 
         </LinearLayout>
 
