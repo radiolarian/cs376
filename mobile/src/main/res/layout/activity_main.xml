@@ -8,55 +8,94 @@
 
 
     <LinearLayout
-        android:layout_marginTop="65dp"
+        android:layout_marginTop="20dp"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:orientation="horizontal"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp">
+
+            <Button
+                android:id="@+id/get_started"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Train App" />
+
+            <Button
+                android:id="@+id/learn_more"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Learn More" />
+
+            <ToggleButton
+                android:id="@+id/vib_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vibrate Watch" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/welcome_msg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome back!"
-            android:textSize="16pt"
+            android:layout_marginLeft="20dp"
             android:padding="12dp"
-            />
+            android:text="Welcome back!"
+            android:textSize="16pt" />
 
         <com.jjoe64.graphview.GraphView
-            android:layout_marginLeft="20dp"
+            android:id="@+id/graph"
             android:layout_width="match_parent"
             android:layout_height="200dip"
-            android:id="@+id/graph" />
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="35dp"
+            android:layout_marginRight="10dp"
+            android:padding="4dp" />
 
+
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                android:gravity="center|bottom"
+                android:padding="6dp"
+                android:layout_weight="1"
+                android:weightSum="2">
+
+                <Button
+                    android:id="@+id/softWOZ"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="SOFT"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:textColor="@android:color/transparent"/>
+                <Button
+                    android:id="@+id/loudWOZ"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="LOUD"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:textColor="@android:color/transparent"/>
+
+
+
+        </LinearLayout>
     </LinearLayout>
 
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <Button
-            android:id="@+id/get_started"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Train App" />
-
-        <Button
-            android:id="@+id/learn_more"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Learn More" />
-
-        <ToggleButton
-            android:id="@+id/vib_mode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Vibrate Watch" />
-
-    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

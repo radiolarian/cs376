@@ -165,6 +165,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //buttons for WoZ
+        final Button loudButton = (Button)findViewById(R.id.loudWOZ);
+        loudButton.setVisibility(View.VISIBLE);
+        loudButton.setBackgroundColor(Color.TRANSPARENT);
+        loudButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WATCH_VIBRATION) {
+                    if (bound) {
+                        mService.sendMessage(MainService.PATH, "loud");
+                    }
+                }
+            }
+        });
+
+        final Button softButton = (Button)findViewById(R.id.softWOZ);
+        softButton.setVisibility(View.VISIBLE);
+        softButton.setBackgroundColor(Color.TRANSPARENT);
+        softButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WATCH_VIBRATION) {
+                    if (bound) {
+                        mService.sendMessage(MainService.PATH, "soft");
+                    }
+                }
+            }
+        });
+
         // Set up audio buffer
         try
         {
