@@ -329,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
         // Create and bind service
         Intent intent = new Intent(this, MainService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        Log.d("watch", "service started");
     }
 
     @Override
@@ -514,6 +515,7 @@ public class MainActivity extends AppCompatActivity {
                             if (USE_WATCH_VIBRATION && !USE_WOZ) {
                                 if (bound) {
                                     mService.sendMessage(MainService.PATH, Float.toString(result.data));
+                                    Log.d("watch", "sent msg to watch in speech detection");
                                 }
                             }
                             else {

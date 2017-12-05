@@ -27,11 +27,12 @@ public class MainService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(Bundle connectionHint) {
-                        Log.d("tag", "onConnected");
+                        Log.d("watch", "watch is now onConnected");
                     }
 
                     @Override
@@ -73,6 +74,7 @@ public class MainService extends Service {
                 for(Node node : nodes.getNodes()) {
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
                             googleApiClient, node.getId(), path, text.getBytes() ).await();
+                    Log.d("watch", "sent a msg " + result);
                 }
             }
         }).start();

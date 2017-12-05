@@ -30,26 +30,27 @@ public class WatchService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
+        Log.d("watch", "HI?");
         String s = new String(messageEvent.getData());
-        Log.d("tag", s);
+        Log.d("watch", s);
         Log.d("path", messageEvent.getPath());
 
         if( messageEvent.getPath().equalsIgnoreCase( WOZPATH ) ) {
             Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
             if (s.equals("loud")) {
                 vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
-                Log.d("tag", "Vibrated Loud");
+                Log.d("watch", "Vibrated Loud");
             }
             else if (s.equals("soft")) {
                 vibrator.vibrate(vibrationPatternSoft, indexInPatternToRepeat);
-                Log.d("tag", "Vibrated Soft");
+                Log.d("watch", "Vibrated Soft");
             }
 
         } else if (messageEvent.getPath().equalsIgnoreCase( PATH ) ) {
             //just vibrate like normal
             Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
             vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
-            Log.d("tag", "Vibrated no WoZ");
+            Log.d("watch", "Vibrated no WoZ");
         }
         else {
             super.onMessageReceived( messageEvent );
