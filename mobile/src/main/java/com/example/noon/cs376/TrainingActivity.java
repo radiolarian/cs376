@@ -154,7 +154,8 @@ public class TrainingActivity extends AppCompatActivity {
                     //new trainTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
                     //Advance to History Screen
-                    startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                    //startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                    finish();
 
                     return true;
                 }

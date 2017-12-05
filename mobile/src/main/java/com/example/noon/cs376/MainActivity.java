@@ -265,7 +265,6 @@ public class MainActivity extends AppCompatActivity {
         graph.addSeries(speakingIncidents);
         graph.addSeries(loudIncidents);
 
-
     }
 
 
