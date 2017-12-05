@@ -77,12 +77,12 @@ public class TrainingActivity extends AppCompatActivity {
     private AsyncTask<Void, Void, ParseResult> _task;
     private boolean bound = false;
     private boolean inNewSampleRecordingState = false;
-    private boolean inTestingState = false;
     private float envNoiseLevel; //from movin avg
     private float LOUD_RATIO_THRESHOLD = 2.2f; //vibrate watch if x times softer/louder than env noise
     private float LOUD_MINIMUM_TRESHOLD = 800f;
     private boolean USE_WATCH_VIBRATION = false;
     private int samplesToDelay = 0;
+    private boolean envNoiseSet = false;
 
     MainDatabase db;
     MainDao dao;
@@ -109,6 +109,7 @@ public class TrainingActivity extends AppCompatActivity {
     //AlizeSpeechRecognizer alize;
 
     MainService mService;
+    Button recordButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,10 +117,13 @@ public class TrainingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_training);
 
         //link the buttons
-        final Button recordButton = findViewById(R.id.record);
+        recordButton = findViewById(R.id.record);
         recordButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                // Button is not active until environmental level is established
+                if (!envNoiseSet) { return false; };
+
                 if (event.getAction() == MotionEvent.ACTION_DOWN){
                     Context context = getApplicationContext();
                     CharSequence text = "Now recording";
@@ -128,7 +132,6 @@ public class TrainingActivity extends AppCompatActivity {
 
                     //new recordConvo().execute();
 
-                    inTestingState = false;
                     inNewSampleRecordingState = true;
                     Log.d("Alize", "Recording a new sample...");
                     // Do what you want
@@ -296,61 +299,58 @@ public class TrainingActivity extends AppCompatActivity {
                 short[] trimmedBuffer = Arrays.copyOfRange(buffer, 0, bufferReadResult);
                 if (bufferReadResult > 0)
                 {
-                    if (samplesToDelay == 0) {
-                        if (inNewSampleRecordingState || inTestingState) {
-                            double[] x, y;
-                            double[] window = fft.getWindow();
-                            int loops = (fftLoopsPerBuffer * 2) - 1;
-                            int chunkSize = FFT_BINS >> 1;
-                            for (int index = 0; index < loops; index++) {
-                                x = new double[FFT_BINS];
-                                y = new double[FFT_BINS];
-                                for (int i = 0; i < chunkSize; i++) {
-                                    x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
-                                    x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
-                                }
-                                fft.fft(x, y);
-                                RelativeAudioParser.addToBins(FFT.computeMagnitude(x, y));
-                            }
-                            //alize.addNewAudioSample(trimmedBuffer);
+                    double[] x, y;
+                    double[] window = fft.getWindow();
+                    int loops = (fftLoopsPerBuffer * 2) - 1;
+                    int chunkSize = FFT_BINS >> 1;
+                    for (int index = 0; index < loops; index++) {
+                        x = new double[FFT_BINS];
+                        y = new double[FFT_BINS];
+                        for (int i = 0; i < chunkSize; i++) {
+                            x[i] = window[i] * (double) buffer[(index * chunkSize) + i];
+                            x[i + chunkSize] = window[i + chunkSize] * (double) buffer[(index * chunkSize) + i + chunkSize];
+                        }
+                        fft.fft(x, y);
+                        RelativeAudioParser.addToBins(FFT.computeMagnitude(x, y));
+                    }
+                    //alize.addNewAudioSample(trimmedBuffer);
 
-                            //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
-                            //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
-                            //alize.addNewAudioSample(audioBytes);
+                    //byte[] audioBytes = new byte[2 * BUFFER_SIZE];
+                    //ByteBuffer.wrap(audioBytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(buffer);
+                    //alize.addNewAudioSample(audioBytes);
 
-                            //alize.resetAudio();
+                    //alize.resetAudio();
 
-                            float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                            boolean speakerMatch = RelativeAudioParser.isSpeakerMatch();
+                    float rms = RelativeAudioParser.RMS(trimmedBuffer);
 
+                    //add result to moving average -- but only if we don't detect the speaker
+                    if (!inNewSampleRecordingState) {
+                        movingavg.add(rms, RelativeAudioParser.getCurrentBins());
+                    } else {
+                        movingavg.clearCandidate();
+                    }
 
+                    //update env noise
+                    envNoiseLevel = movingavg.getAverage();
 
-
-                            /* TODO HERE: For both training and main activity, we should be recording the background noise and storing its FFT, then substracting the FFT from the FFT of the speaker*/
-
-
-                            //add result to moving average -- but only if we don't detect the speaker
-                            if (movingavg.getAverage() < 0 || !speakerMatch) {
-                                movingavg.add(rms, RelativeAudioParser.getCurrentBins());
-                            } else {
-                                movingavg.clearCandidate();
-                            }
-
-                            //update env noise
-                            envNoiseLevel = movingavg.getAverage();
-
-                            //fill result
-                            Log.d("Test","envnoiselevel: " + envNoiseLevel);
-                            Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
-
-                            result = new ParseResult(ParseResult.ParseErrorCodes.SUCCESS, rms, envNoiseLevel, speakerMatch);
-                            if (inTestingState) {
-                                RelativeAudioParser.resetCurrentBins();
-                            }
+                    if (!envNoiseSet) {
+                        if (envNoiseLevel > 0) {
+                            envNoiseSet = true;
+                            recordButton.setText("Record");
                         }
                     }
-                    else {
-                        samplesToDelay--;
+
+                    //fill result
+                    Log.d("Test","envnoiselevel: " + envNoiseLevel);
+                    Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
+
+                    result = new ParseResult(ParseResult.ParseErrorCodes.TRAINING, rms, envNoiseLevel, inNewSampleRecordingState);
+                    if (!inNewSampleRecordingState) {
+                        RelativeAudioParser.resetCurrentBins();
+                    }
+                    else
+                    {
+                        RelativeAudioParser.subtractFromBins(movingavg.getNormalizedFftBins());
                     }
                     break;
                 }
@@ -398,35 +398,6 @@ public class TrainingActivity extends AppCompatActivity {
 
 //                    Log.d("graph", "at time " + time + " grapphed speaker vol " + result.data + " and env noise " + envNoiseLevel);
 
-
-                    if (result.speakerMatch) {
-
-                        float upper = envNoiseLevel * LOUD_RATIO_THRESHOLD;
-                        float rms = result.data;
-                        if (rms >= upper && rms >= LOUD_MINIMUM_TRESHOLD) {
-                            //a hit!
-                            //probably do speaker ID here
-                            samplesToDelay = DELAY_SAMPLES_AFTER_VIBRATION;
-                            //vibrate the watch
-                            if (USE_WATCH_VIBRATION) {
-                                if (bound) {
-                                    mService.sendMessage(MainService.PATH, Float.toString(result.data));
-                                }
-                            }
-                            else {
-                                triggerVibrate();
-                            }
-
-                            Log.d("Result", "LOUD: " + result.data + "\r\n");
-                            timesTriggered += 1;
-                            incrementEnvironment(envNoiseLevel);
-
-
-                        } else {
-                            Log.d("Result", "Not loud: " + result.data + "\r\n");
-
-                        }
-                    }
 
                 }
                 else {

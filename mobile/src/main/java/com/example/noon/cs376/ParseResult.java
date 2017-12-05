@@ -57,6 +57,7 @@ public class ParseResult
         SUCCESS,
         NO_AUDIO,
         CANCELLED,
+        TRAINING,
         ERROR
     }
 

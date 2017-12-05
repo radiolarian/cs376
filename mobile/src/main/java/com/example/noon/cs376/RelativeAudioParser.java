@@ -27,6 +27,14 @@ public class RelativeAudioParser {
         }
     }
 
+    public static void subtractFromBins(double[] f)
+    {
+        for (int i = 0; i < numRelevantBins; i++)
+        {
+            currentBins[i] -= f[i];
+        }
+    }
+
     public static double[] getCurrentBins()
     {
         return currentBins;
@@ -76,10 +84,12 @@ public class RelativeAudioParser {
 
         double[] xcorr = DSP.xcorr(normCurrent, normSpeaker);
 
-        System.out.print("Xcorr coeff: " + (DSP.max(xcorr) / perfectCorr) + " --- ");
+        double alpha = (DSP.max(xcorr) / perfectCorr);
+
+        System.out.print("Xcorr coeff: " + alpha + " --- ");
         printArray(xcorr);
 
-        return DSP.max(xcorr) >= MATCH_ALPHA;
+        return alpha >= MATCH_ALPHA;
     }
 
     public static boolean isSpeakerMatch()

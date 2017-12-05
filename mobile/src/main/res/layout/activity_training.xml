@@ -27,7 +27,7 @@
             android:id="@+id/recording_instructions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Press and hold. Release to stop recording."
+            android:text="Wait in a quiet environment until the button below is ready. Then, Press and hold to record. Release to stop recording."
             android:textAlignment="center"
             android:textSize="24sp"
             tools:layout_editor_absoluteX="0dp"
@@ -37,7 +37,7 @@
             android:id="@+id/record"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Record"
+            android:text="Please wait..."
             tools:layout_editor_absoluteX="148dp"
             tools:layout_editor_absoluteY="493dp" />
 
