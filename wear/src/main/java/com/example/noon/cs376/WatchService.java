@@ -17,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 public class WatchService extends WearableListenerService {
     /*variables for path control*/
     private static final String PATH = "/watch";
-    private static final String WOZPATH = "/woz";
 
     //    private static final double VIBRATION_THRESHOLD = 5000.0;
 //    private static final double VIBRATION_THRESHOLD_LOUD = 15000.0;
@@ -35,22 +34,19 @@ public class WatchService extends WearableListenerService {
         Log.d("watch", s);
         Log.d("path", messageEvent.getPath());
 
-        if( messageEvent.getPath().equalsIgnoreCase( WOZPATH ) ) {
+        if( messageEvent.getPath().equalsIgnoreCase( PATH ) ) {
             Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
             if (s.equals("loud")) {
                 vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
                 Log.d("watch", "Vibrated Loud");
-            }
-            else if (s.equals("soft")) {
+            } else if (s.equals("soft")) {
                 vibrator.vibrate(vibrationPatternSoft, indexInPatternToRepeat);
                 Log.d("watch", "Vibrated Soft");
+            } else {
+                //just vibrate like normal
+                vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
+                Log.d("watch", "Vibrated no WoZ");
             }
-
-        } else if (messageEvent.getPath().equalsIgnoreCase( PATH ) ) {
-            //just vibrate like normal
-            Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-            vibrator.vibrate(vibrationPatternLoud, indexInPatternToRepeat);
-            Log.d("watch", "Vibrated no WoZ");
         }
         else {
             super.onMessageReceived( messageEvent );

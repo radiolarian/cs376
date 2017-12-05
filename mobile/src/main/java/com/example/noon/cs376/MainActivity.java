@@ -183,9 +183,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //buttons for WoZ
-        final Button loudButton = findViewById(R.id.loudWOZ);
-        loudButton.setVisibility(View.VISIBLE);
-        loudButton.setBackgroundColor(Color.TRANSPARENT);
+        Button loudButton = findViewById(R.id.loudWOZ);
+//        loudButton.setVisibility(View.VISIBLE);
+//        loudButton.setBackgroundColor(Color.TRANSPARENT);
         loudButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -193,16 +193,16 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (USE_WOZ) {
                     if (bound) {
-                        mService.sendMessage(MainService.WOZPATH, "loud");
+                        mService.sendMessage(MainService.PATH, "loud");
                         Log.d("watch", "sent loud msg");
                     }
                 }
             }
         });
 
-        final Button softButton = findViewById(R.id.softWOZ);
-        softButton.setVisibility(View.VISIBLE);
-        softButton.setBackgroundColor(Color.TRANSPARENT);
+        Button softButton = findViewById(R.id.softWOZ);
+//        softButton.setVisibility(View.VISIBLE);
+//        softButton.setBackgroundColor(Color.TRANSPARENT);
         softButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (USE_WOZ) {
                     if (bound) {
-                        mService.sendMessage(MainService.WOZPATH, "soft");
+                        mService.sendMessage(MainService.PATH, "soft");
                         Log.d("watch", "sent soft msg");
 
                     }
