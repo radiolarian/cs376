@@ -90,6 +90,10 @@ public class MainActivity extends AppCompatActivity {
     MainDatabase db;
     MainDao dao;
 
+    WozDatabase wdb;
+    WozDao wdao;
+    WozResult lastWozResult;
+
     MovingAverage movingavg;
     //RelativeAudioParser parser;
     FFT fft;

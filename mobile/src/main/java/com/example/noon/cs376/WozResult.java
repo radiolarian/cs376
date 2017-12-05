@@ -20,6 +20,9 @@ public class WozResult
     public final static int VOLUME_CONDITION__SILENT = 0;
     public final static int VOLUME_CONDITION__MEDIUM = 1;
     public final static int VOLUME_CONDITION__NOISY = 2;
+    public final static int CONVERSATION_CONDITION__SHREK = 0;
+    public final static int CONVERSATION_CONDITION__TFIOS = 1;
+    public final static int CONVERSATION_CONDITION__PB = 2;
     public final static int SPEAKER_VOLUME__LOW = 0;
     public final static int SPEAKER_VOLUME__CORRECT = 1;
     public final static int SPEAKER_VOLUME__HIGH = 2;
@@ -36,6 +39,9 @@ public class WozResult
 
     @ColumnInfo
     public int volumeCondition;
+
+    @ColumnInfo
+    public int conversationCondition;
 
     @ColumnInfo
     public int speakerVolume;
@@ -59,11 +65,12 @@ public class WozResult
     }
 
 
-    public WozResult(int ParticipantID, int TrialNum, int VolumeCondition, int SpeakerVolume)
+    public WozResult(int ParticipantID, int TrialNum, int VolumeCondition, int ConversationCondition, int SpeakerVolume)
     {
         this.participantId = ParticipantID;
         this.trialNum = TrialNum;
         this.volumeCondition = VolumeCondition;
+        this.conversationCondition = ConversationCondition;
         this.speakerVolume = SpeakerVolume;
         this.timestamp = dateToTimestamp(Calendar.getInstance().getTime());
     }
