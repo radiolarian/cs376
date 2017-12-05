@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private float LOUD_RATIO_THRESHOLD = 2.2f; //vibrate watch if x times softer/louder than env noise
     private float LOUD_MINIMUM_TRESHOLD = 800f;
     private boolean USE_WATCH_VIBRATION = false;
+    private boolean USE_WOZ = false;
     private int samplesToDelay = 0;
 
     MainDatabase db;
@@ -153,7 +154,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return false;
             }
-        });        //for vibration boolean
+        });
+
+        //for vibration boolean
         ToggleButton toggle = findViewById(R.id.vib_mode);
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -165,8 +168,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //to disable normal vibrating if WoZ
+        ToggleButton toggleWoZ = findViewById(R.id.woz_mode);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    USE_WOZ = true;
+                } else {
+                    USE_WOZ = false;
+                }
+            }
+        });
+
         //buttons for WoZ
-        final Button loudButton = (Button)findViewById(R.id.loudWOZ);
+        final Button loudButton = findViewById(R.id.loudWOZ);
         loudButton.setVisibility(View.VISIBLE);
         loudButton.setBackgroundColor(Color.TRANSPARENT);
         loudButton.setOnClickListener(new View.OnClickListener()
@@ -176,13 +191,13 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (USE_WATCH_VIBRATION) {
                     if (bound) {
-                        mService.sendMessage(MainService.PATH, "loud");
+                        mService.sendMessage(MainService.WOZPATH, "loud");
                     }
                 }
             }
         });
 
-        final Button softButton = (Button)findViewById(R.id.softWOZ);
+        final Button softButton = findViewById(R.id.softWOZ);
         softButton.setVisibility(View.VISIBLE);
         softButton.setBackgroundColor(Color.TRANSPARENT);
         softButton.setOnClickListener(new View.OnClickListener()
@@ -192,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (USE_WATCH_VIBRATION) {
                     if (bound) {
-                        mService.sendMessage(MainService.PATH, "soft");
+                        mService.sendMessage(MainService.WOZPATH, "soft");
                     }
                 }
             }
@@ -489,8 +504,8 @@ public class MainActivity extends AppCompatActivity {
                             //a hit!
                             //probably do speaker ID here
                             samplesToDelay = DELAY_SAMPLES_AFTER_VIBRATION;
-                            //vibrate the watch
-                            if (USE_WATCH_VIBRATION) {
+                            //vibrate the watch and also not wizard
+                            if (USE_WATCH_VIBRATION && !USE_WOZ) {
                                 if (bound) {
                                     mService.sendMessage(MainService.PATH, Float.toString(result.data));
                                 }
@@ -508,6 +523,7 @@ public class MainActivity extends AppCompatActivity {
                             incrementEnvironment(envNoiseLevel);
 
                             //edit the textview
+                            //TODO ADD SOFT TO THIS FOR WOZ
                             TextView welcome = findViewById(R.id.welcome_msg);
                             if (timesTriggered == 1) {
                                 welcome.setText("Today, you spoke too loudly 1 time in a " + calculateCommonEnvironment() + " environment.");
