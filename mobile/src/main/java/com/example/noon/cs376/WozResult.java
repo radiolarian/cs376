@@ -38,6 +38,9 @@ public class WozResult
     public int trialNum;
 
     @ColumnInfo
+    public boolean wearingWatch;
+
+    @ColumnInfo
     public int volumeCondition;
 
     @ColumnInfo
@@ -65,10 +68,11 @@ public class WozResult
     }
 
 
-    public WozResult(int ParticipantID, int TrialNum, int VolumeCondition, int ConversationCondition, int SpeakerVolume)
+    public WozResult(int ParticipantID, int TrialNum, boolean WearingWatch, int VolumeCondition, int ConversationCondition, int SpeakerVolume)
     {
         this.participantId = ParticipantID;
         this.trialNum = TrialNum;
+        this.wearingWatch = WearingWatch;
         this.volumeCondition = VolumeCondition;
         this.conversationCondition = ConversationCondition;
         this.speakerVolume = SpeakerVolume;
