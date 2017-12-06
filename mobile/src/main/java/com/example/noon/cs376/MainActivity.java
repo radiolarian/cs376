@@ -41,6 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -150,11 +151,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Create database
         db = Room.databaseBuilder(getApplicationContext(),
-                MainDatabase.class, "database-name").fallbackToDestructiveMigration().build();
+                MainDatabase.class, "maindatabase").fallbackToDestructiveMigration().build();
         dao = db.mainDao();
 
         wdb = Room.databaseBuilder(getApplicationContext(),
-                WozDatabase.class, "woz-database-name").fallbackToDestructiveMigration().build();
+                WozDatabase.class, "wozdatabase").fallbackToDestructiveMigration().build();
         wdao = wdb.wozDao();
 
         //link the buttons
@@ -388,6 +389,15 @@ public class MainActivity extends AppCompatActivity {
                         wozTrialId++;
                         TextView trialTextView = findViewById(R.id.trialID);
                         trialTextView.setText(""+wozTrialId);
+                        /*
+                        new Thread( new Runnable() {
+                            @Override
+                            public void run() {
+                                List<WozResult> ids = wdao.getParticipantIds();
+                                System.out.println("num ids: " + ids.size());
+                            }
+                        }).start();
+                        */
 
                         lastWozResult = newResult;
                         Log.d("watch", "sent loud msg");
