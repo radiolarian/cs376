@@ -18,11 +18,15 @@ import android.os.IBinder;
 import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -93,6 +97,10 @@ public class MainActivity extends AppCompatActivity {
     WozDatabase wdb;
     WozDao wdao;
     WozResult lastWozResult;
+    private int wozTrialId = 0;
+    private int wozParticipantId = -1;
+    private int wozConversationCondition = -1;
+    private int wozVolumeCondition = -1;
 
     MovingAverage movingavg;
     //RelativeAudioParser parser;
@@ -130,6 +138,10 @@ public class MainActivity extends AppCompatActivity {
         db = Room.databaseBuilder(getApplicationContext(),
                 MainDatabase.class, "database-name").fallbackToDestructiveMigration().build();
         dao = db.mainDao();
+
+        wdb = Room.databaseBuilder(getApplicationContext(),
+                WozDatabase.class, "woz-database-name").fallbackToDestructiveMigration().build();
+        wdao = wdb.wozDao();
 
         //link the buttons
         final Button trainAppButton = findViewById(R.id.get_started);
@@ -180,17 +192,157 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     USE_WOZ = true;
+                    LinearLayout wozlayout = findViewById(R.id.WOZinterface);
+                    wozlayout.setVisibility(View.VISIBLE);
                 } else {
                     USE_WOZ = false;
+                    LinearLayout wozlayout = findViewById(R.id.WOZinterface);
+                    wozlayout.setVisibility(View.INVISIBLE);
                 }
                 Log.d("button", "Changed Woz to " + USE_WOZ);
             }
         });
 
-        //buttons for WoZ
+        // ------------ buttons for WoZ ------------------ //
+        final EditText participantIdTextView = findViewById(R.id.participantID);
+        participantIdTextView.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    wozParticipantId = Integer.parseInt(participantIdTextView.getText().toString());
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        Button undoTrialButton = findViewById(R.id.undoTrial);
+        undoTrialButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozTrialId--;
+                    TextView trialTextView = findViewById(R.id.trialID);
+                    trialTextView.setText(""+wozTrialId);
+                    new Thread( new Runnable() {
+                        @Override
+                        public void run() {
+                            wdao.delete(lastWozResult);
+                        }
+                    }).start();
+
+                }
+            }
+        });
+
+        Button shrekButton = findViewById(R.id.shrekConv);
+        shrekButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozConversationCondition = WozResult.CONVERSATION_CONDITION__SHREK;
+                    wozTrialId = 0;
+                    TextView trialTextView = findViewById(R.id.trialID);
+                    trialTextView.setText(""+wozTrialId);
+                    Context context = getApplicationContext();
+                    CharSequence text = "THIS IS MY SWAMP NOW";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                }
+            }
+        });
+
+        Button tfiosButton = findViewById(R.id.TFIOSConv);
+        tfiosButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozConversationCondition = WozResult.CONVERSATION_CONDITION__TFIOS;
+                    wozTrialId = 0;
+                    TextView trialTextView = findViewById(R.id.trialID);
+                    trialTextView.setText(""+wozTrialId);
+                    Context context = getApplicationContext();
+                    CharSequence text = "Conv: TFIOS";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                }
+            }
+        });
+
+        Button pbButton = findViewById(R.id.PBConv);
+        pbButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozConversationCondition = WozResult.CONVERSATION_CONDITION__PB;
+                    wozTrialId = 0;
+                    TextView trialTextView = findViewById(R.id.trialID);
+                    trialTextView.setText(""+wozTrialId);
+                    Context context = getApplicationContext();
+                    CharSequence text = "Conv: PB";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                }
+            }
+        });
+
+        Button quietButton = findViewById(R.id.quietWOZ);
+        quietButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozVolumeCondition = WozResult.VOLUME_CONDITION__SILENT;
+                    Context context = getApplicationContext();
+                    CharSequence text = "Volume: Quiet";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                }
+            }
+        });
+
+        Button mediumButton = findViewById(R.id.mediumWOZ);
+        mediumButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozVolumeCondition = WozResult.VOLUME_CONDITION__MEDIUM;
+                    Context context = getApplicationContext();
+                    CharSequence text = "Volume: Medium";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                }
+            }
+        });
+
+        Button noisyButton = findViewById(R.id.noisyWOZ);
+        noisyButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    wozVolumeCondition = WozResult.VOLUME_CONDITION__NOISY;
+                    Context context = getApplicationContext();
+                    CharSequence text = "Volume: Noisy";
+                    int duration = Toast.LENGTH_SHORT;
+                    Toast.makeText(context, text, duration).show();
+                }
+            }
+        });
+
         Button loudButton = findViewById(R.id.loudWOZ);
-//        loudButton.setVisibility(View.VISIBLE);
-//        loudButton.setBackgroundColor(Color.TRANSPARENT);
         loudButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -199,6 +351,19 @@ public class MainActivity extends AppCompatActivity {
                 if (USE_WOZ) {
                     if (bound) {
                         mService.sendMessage(MainService.PATH, "loud");
+                        final WozResult newResult = new WozResult(wozParticipantId, wozTrialId, USE_WATCH_VIBRATION, wozVolumeCondition, wozConversationCondition, WozResult.SPEAKER_VOLUME__HIGH);
+                        new Thread( new Runnable() {
+                            @Override
+                            public void run() {
+                                wdao.insert(newResult);
+                            }
+                        }).start();
+                        Log.d("WozResult", newResult.toString());
+                        wozTrialId++;
+                        TextView trialTextView = findViewById(R.id.trialID);
+                        trialTextView.setText(""+wozTrialId);
+
+                        lastWozResult = newResult;
                         Log.d("watch", "sent loud msg");
                     }
                 }
@@ -206,8 +371,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button softButton = findViewById(R.id.softWOZ);
-//        softButton.setVisibility(View.VISIBLE);
-//        softButton.setBackgroundColor(Color.TRANSPARENT);
         softButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -216,12 +379,51 @@ public class MainActivity extends AppCompatActivity {
                 if (USE_WOZ) {
                     if (bound) {
                         mService.sendMessage(MainService.PATH, "soft");
-                        Log.d("watch", "sent soft msg");
+                        final WozResult newResult = new WozResult(wozParticipantId, wozTrialId, USE_WATCH_VIBRATION, wozVolumeCondition, wozConversationCondition, WozResult.SPEAKER_VOLUME__LOW);
+                        new Thread( new Runnable() {
+                            @Override
+                            public void run() {
+                                wdao.insert(newResult);
+                            }
+                        }).start();
+                        Log.d("WozResult", newResult.toString());
+                        wozTrialId++;
+                        TextView trialTextView = findViewById(R.id.trialID);
+                        trialTextView.setText(""+wozTrialId);
 
+                        lastWozResult = newResult;
+                        Log.d("watch", "sent soft msg");
                     }
                 }
             }
         });
+
+        Button correctButton = findViewById(R.id.correctWOZ);
+        correctButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (USE_WOZ) {
+                    if (bound) {
+                        final WozResult newResult = new WozResult(wozParticipantId, wozTrialId, USE_WATCH_VIBRATION, wozVolumeCondition, wozConversationCondition, WozResult.SPEAKER_VOLUME__CORRECT);
+                        new Thread( new Runnable() {
+                            @Override
+                            public void run() {
+                                wdao.insert(newResult);
+                            }
+                        }).start();
+                        Log.d("WozResult", newResult.toString());
+                        wozTrialId++;
+                        TextView trialTextView = findViewById(R.id.trialID);
+                        trialTextView.setText(""+wozTrialId);
+
+                        lastWozResult = newResult;
+                    }
+                }
+            }
+        });
+
 
         // Set up audio buffer
         try
@@ -323,6 +525,10 @@ public class MainActivity extends AppCompatActivity {
         graph.addSeries(speakingIncidents);
         graph.addSeries(loudIncidents);
 
+
+        // Hide WoZ layout on start
+        LinearLayout wozlayout = findViewById(R.id.WOZinterface);
+        wozlayout.setVisibility(View.INVISIBLE);
     }
 
 

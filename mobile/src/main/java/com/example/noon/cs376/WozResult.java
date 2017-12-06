@@ -79,6 +79,26 @@ public class WozResult
         this.timestamp = dateToTimestamp(Calendar.getInstance().getTime());
     }
 
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Participant ID: ");
+        sb.append(participantId);
+        sb.append(", Trial num: ");
+        sb.append(trialNum);
+        sb.append(", Wearing watch: ");
+        sb.append(wearingWatch);
+        sb.append(", Volume Condition: ");
+        sb.append(volumeCondition);
+        sb.append(", Conversation Condition: ");
+        sb.append(conversationCondition);
+        sb.append(", Speaker Volume: ");
+        sb.append(speakerVolume);
+        sb.append(", Time: ");
+        sb.append(timestamp);
+        return sb.toString();
+    }
+
     public WozResult()
     {
 
