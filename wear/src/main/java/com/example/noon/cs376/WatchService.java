@@ -21,7 +21,7 @@ public class WatchService extends WearableListenerService {
     //    private static final double VIBRATION_THRESHOLD = 5000.0;
 //    private static final double VIBRATION_THRESHOLD_LOUD = 15000.0;
 //    private static final long[] vibrationPattern = {0, 250}; //wait time, on time
-    private static final long[] vibrationPatternLoud = {0, 100, 100, 100, 250, 100, 100, 100}; //wait time, on time - vibes 4 times
+    private static final long[] vibrationPatternLoud = {0, 400}; //wait time, on time - vibes 4 times
     private static final long[] vibrationPatternSoft = {0, 100, 100, 100}; //wait time, on time - vibes 2 times
 
     final int indexInPatternToRepeat = -1;

@@ -109,21 +109,35 @@ public class MainActivity extends AppCompatActivity {
     int fftLoopsPerBuffer;
 
     //graph stuff
+    GraphView graph;
+    String currWozGraph = "";
     LineGraphSeries<DataPoint> envNoise = new LineGraphSeries<>();
     LineGraphSeries<DataPoint> speakerVol = new LineGraphSeries<>();
     PointsGraphSeries<DataPoint> loudIncidents = new PointsGraphSeries<>();
     PointsGraphSeries<DataPoint> speakingIncidents = new PointsGraphSeries<>();
-
 
     //welcome message display stuff
     private int timesTriggered = 0;
     private int quiet_incidents = 0;
     private int moderate_incidents = 0;
     private int loud_incidents = 0;
-    private static final float MODERATE_THRES = 5000;
-    private static final float LOUD_THRES = 10000;
-    private String welcomeMsg = "Today, you spoke too loudly ";
-    private String welcomeMsg2 = " times, mostly in ";
+    private static final float QUIET_THRES = 150;
+    private static final float MODERATE_THRES = 3000;
+    private static final float LOUD_THRES = 5500;
+
+    //for graph WoZ lines
+    private static final float QUIET_TOP = 2500;
+    private static final float MODERATE_TOP = 5500;
+    private static final float LOUD_TOP = 6000;
+
+    LineGraphSeries<DataPoint> quietThres = new LineGraphSeries<>();
+    LineGraphSeries<DataPoint> moderateThres = new LineGraphSeries<>();
+    LineGraphSeries<DataPoint> loudThres = new LineGraphSeries<>();
+
+    LineGraphSeries<DataPoint> quietTop = new LineGraphSeries<>();
+    LineGraphSeries<DataPoint> moderateTop = new LineGraphSeries<>();
+    LineGraphSeries<DataPoint> loudTop = new LineGraphSeries<>();
+
 
     //AlizeSpeechRecognizer alize;
 
@@ -306,6 +320,10 @@ public class MainActivity extends AppCompatActivity {
                     CharSequence text = "Volume: Quiet";
                     int duration = Toast.LENGTH_SHORT;
                     Toast.makeText(context, text, duration).show();
+
+                    //show graph
+                    replaceWozGraph("quiet");
+                    currWozGraph = "quiet";
                 }
             }
         });
@@ -322,6 +340,10 @@ public class MainActivity extends AppCompatActivity {
                     CharSequence text = "Volume: Medium";
                     int duration = Toast.LENGTH_SHORT;
                     Toast.makeText(context, text, duration).show();
+
+                    //show graph
+                    replaceWozGraph("moderate");
+                    currWozGraph = "moderate";
                 }
             }
         });
@@ -338,6 +360,10 @@ public class MainActivity extends AppCompatActivity {
                     CharSequence text = "Volume: Noisy";
                     int duration = Toast.LENGTH_SHORT;
                     Toast.makeText(context, text, duration).show();
+
+                    //show graph
+                    replaceWozGraph("loud");
+                    currWozGraph = "loud";
                 }
             }
         });
@@ -456,7 +482,8 @@ public class MainActivity extends AppCompatActivity {
         movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE, FFT_BINS);
 
         //init graph
-        GraphView graph = findViewById(R.id.graph);
+        graph = findViewById(R.id.graph);
+
 
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
@@ -477,6 +504,19 @@ public class MainActivity extends AppCompatActivity {
         speakerVol.setThickness(8);
 
         graph.setTitle(formattedDate);
+
+        quietThres.setColor(Color.RED);
+        quietThres.setThickness(1);
+        moderateThres.setColor(Color.RED);
+        moderateThres.setThickness(1);
+        loudThres.setColor(Color.RED);
+        loudThres.setThickness(1);
+        quietTop.setColor(Color.RED);
+        quietTop.setThickness(1);
+        moderateTop.setColor(Color.RED);
+        moderateTop.setThickness(1);
+        loudTop.setColor(Color.RED);
+        loudTop.setThickness(1);
 
 
         graph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
@@ -501,12 +541,14 @@ public class MainActivity extends AppCompatActivity {
         //current time
 
         Calendar cal = Calendar.getInstance();
+
         Date currtime = cal.getTime();
         cal.add(Calendar.MINUTE, 1);
         Date futuretime = cal.getTime();
 
         Long start = currtime.getTime();
         Long stop = futuretime.getTime();
+
 
         graph.getViewport().setMinX(start);
         graph.getViewport().setMaxX(stop);
@@ -524,6 +566,8 @@ public class MainActivity extends AppCompatActivity {
         graph.addSeries(speakerVol);
         graph.addSeries(speakingIncidents);
         graph.addSeries(loudIncidents);
+
+
 
 
         // Hide WoZ layout on start
@@ -596,6 +640,67 @@ public class MainActivity extends AppCompatActivity {
 
         // Vibrate for 400 milliseconds
         v.vibrate(VIBRATION_DURATION);
+    }
+
+    private DataPoint[] getNewData (Long time, float value) {
+        DataPoint[] v = new DataPoint[1];
+        v[0] = new DataPoint(time, value);
+        return v;
+    }
+
+    private void replaceWozGraph(String type) {
+        Calendar cal = Calendar.getInstance();
+        Date cur = cal.getTime();
+        Long start = cur.getTime();
+        cal.add(Calendar.MINUTE, 1); //2 min away for rendering line
+        Date woztime = cal.getTime();
+        Long wozstop = woztime.getTime();
+
+        if (currWozGraph.equals("quiet")) {
+            graph.removeSeries(quietThres);
+            graph.removeSeries(quietTop);
+            Log.d("graph", "removed quiet");
+        } else if (currWozGraph.equals("moderate")) {
+            graph.removeSeries(moderateThres);
+            graph.removeSeries(moderateTop);
+            Log.d("graph", "removed mod");
+        } else if (currWozGraph.equals("loud")) {
+            graph.removeSeries(loudThres);
+            graph.removeSeries(loudTop);
+            Log.d("graph", "removed loud");
+        }
+
+        if (type.equals("quiet")) {
+
+            quietThres.resetData(getNewData(start, QUIET_THRES));
+            quietThres.appendData(new DataPoint(wozstop, QUIET_THRES), false, 5);
+            quietTop.resetData(getNewData(start, QUIET_TOP));
+            quietTop.appendData(new DataPoint(wozstop, QUIET_TOP), false, 5);
+
+            graph.addSeries(quietThres);
+            graph.addSeries(quietTop);
+            Log.d("graph", "add quiet");
+        } else if (type.equals("moderate")) {
+            moderateThres.resetData(getNewData(start, MODERATE_THRES));
+            moderateThres.appendData(new DataPoint(wozstop, MODERATE_THRES), false, 5);
+            moderateTop.resetData(getNewData(start, MODERATE_TOP));
+            moderateTop.appendData(new DataPoint(wozstop, MODERATE_TOP), false, 5);
+
+            graph.addSeries(moderateThres);
+            graph.addSeries(moderateTop);
+            Log.d("graph", "add moderate");
+
+        } else if (type.equals("loud")) {
+            loudThres.resetData(getNewData(start, LOUD_THRES));
+            loudThres.appendData(new DataPoint(wozstop, LOUD_THRES), false, 5);
+            loudTop.resetData(getNewData(start, LOUD_TOP));
+            loudTop.appendData(new DataPoint(wozstop, LOUD_TOP), false, 5);
+
+            graph.addSeries(loudThres);
+            graph.addSeries(loudTop);
+            Log.d("graph", "add loud");
+
+        }
     }
 
     private class MonitorAudioTask extends AsyncTask<Void, Void, ParseResult>
@@ -692,6 +797,7 @@ public class MainActivity extends AppCompatActivity {
                 return "quiet";
             }
         }
+
 
         private void incrementEnvironment(float envNoise) {
             if (envNoise < MODERATE_THRES) quiet_incidents += 1;

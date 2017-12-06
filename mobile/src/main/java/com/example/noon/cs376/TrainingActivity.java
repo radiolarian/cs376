@@ -115,7 +115,7 @@ public class TrainingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_training);
-
+        Log.d("train", "created");
         //link the buttons
         recordButton = findViewById(R.id.record);
         recordButton.setOnTouchListener(new View.OnTouchListener() {
@@ -133,7 +133,6 @@ public class TrainingActivity extends AppCompatActivity {
                     //new recordConvo().execute();
 
                     inNewSampleRecordingState = true;
-                    Log.d("Alize", "Recording a new sample...");
                     // Do what you want
                     return true;
                 }
@@ -142,7 +141,6 @@ public class TrainingActivity extends AppCompatActivity {
                         recorderWrapper.stop();
                     }*/
                     inNewSampleRecordingState = false;
-                    Log.d("Alize", "Ending new sample recording");
 
                     Context context = getApplicationContext();
                     CharSequence text = "Finished recording";
@@ -205,22 +203,6 @@ public class TrainingActivity extends AppCompatActivity {
         //parser = new RelativeAudioParser(FFT_BINS);
         //create a moving avg filter
         movingavg = new MovingAverage(MOVING_AVG_WINDOW_SIZE, FFT_BINS);
-
-
-        Calendar c = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
-        String formattedDate = df.format(c.getTime());
-
-
-        envNoise.setTitle("Environmental Noise");
-        envNoise.setColor(Color.GREEN);
-        envNoise.setThickness(4);
-
-        speakerVol.setTitle("Your Volume");
-        speakerVol.setColor(Color.BLUE);
-        speakerVol.setThickness(8);
-        speakerVol.setDrawDataPoints(true);
-        speakerVol.setDataPointsRadius(10);
 
 
     }
@@ -342,13 +324,8 @@ public class TrainingActivity extends AppCompatActivity {
 
                     //update env noise
                     envNoiseLevel = movingavg.getAverage();
+                    Log.d("train", "env noise " + envNoiseLevel);
 
-                    if (!envNoiseSet) {
-                        if (envNoiseLevel > 0) {
-                            envNoiseSet = true;
-                            recordButton.setText("Record");
-                        }
-                    }
 
                     //fill result
                     Log.d("Test","envnoiselevel: " + envNoiseLevel);
@@ -369,25 +346,20 @@ public class TrainingActivity extends AppCompatActivity {
             return result;
         }
 
-        private String calculateCommonEnvironment() {
-            if (moderate_incidents >= quiet_incidents  && moderate_incidents >= loud_incidents) {
-                return "moderately loud";
-            } else if (loud_incidents > moderate_incidents) {
-                return "loud";
-            } else {
-                return "quiet";
-            }
-        }
-
-        private void incrementEnvironment(float envNoise) {
-            if (envNoise < MODERATE_THRES) quiet_incidents += 1;
-            else if (envNoise < LOUD_THRES) moderate_incidents += 1;
-            else loud_incidents += 1;
-        }
 
         @Override
         protected void onPostExecute(final ParseResult result)
         {
+
+            if (!envNoiseSet) {
+                if (envNoiseLevel > 0) {
+                    envNoiseSet = true;
+                    Log.d("train", "before setText");
+                    recordButton.setText("Record");
+                    Log.d("train", "after setText");
+
+                }
+            }
 
             if (result != null)
             {
