@@ -122,14 +122,14 @@ public class MainActivity extends AppCompatActivity {
     private int quiet_incidents = 0;
     private int moderate_incidents = 0;
     private int loud_incidents = 0;
-    private static final float QUIET_THRES = 150;
-    private static final float MODERATE_THRES = 3000;
-    private static final float LOUD_THRES = 5500;
+    private static final float QUIET_THRES = 100;
+    private static final float MODERATE_THRES = 1000;
+    private static final float LOUD_THRES = 1800;
 
     //for graph WoZ lines
-    private static final float QUIET_TOP = 2500;
-    private static final float MODERATE_TOP = 5500;
-    private static final float LOUD_TOP = 6000;
+    private static final float QUIET_TOP = 700;
+    private static final float MODERATE_TOP = 2000;
+    private static final float LOUD_TOP = 2500;
 
     LineGraphSeries<DataPoint> quietThres = new LineGraphSeries<>();
     LineGraphSeries<DataPoint> moderateThres = new LineGraphSeries<>();
@@ -377,7 +377,10 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (USE_WOZ) {
                     if (bound) {
-                        mService.sendMessage(MainService.PATH, "loud");
+                        if (USE_WATCH_VIBRATION) {
+                            mService.sendMessage(MainService.PATH, "loud");
+                        }
+
                         final WozResult newResult = new WozResult(wozParticipantId, wozTrialId, USE_WATCH_VIBRATION, wozVolumeCondition, wozConversationCondition, WozResult.SPEAKER_VOLUME__HIGH);
                         new Thread( new Runnable() {
                             @Override
@@ -414,7 +417,9 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (USE_WOZ) {
                     if (bound) {
-                        mService.sendMessage(MainService.PATH, "soft");
+                        if (USE_WATCH_VIBRATION) {
+                            mService.sendMessage(MainService.PATH, "soft");
+                        }
                         final WozResult newResult = new WozResult(wozParticipantId, wozTrialId, USE_WATCH_VIBRATION, wozVolumeCondition, wozConversationCondition, WozResult.SPEAKER_VOLUME__LOW);
                         new Thread( new Runnable() {
                             @Override
@@ -645,11 +650,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void triggerVibrate()
     {
-        // Get instance of Vibrator from current Context
-        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (!USE_WOZ) {
+            // Get instance of Vibrator from current Context
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        // Vibrate for 400 milliseconds
-        v.vibrate(VIBRATION_DURATION);
+            // Vibrate for 400 milliseconds
+            v.vibrate(VIBRATION_DURATION);
+        }
     }
 
     private DataPoint[] getNewData (Long time, float value) {
