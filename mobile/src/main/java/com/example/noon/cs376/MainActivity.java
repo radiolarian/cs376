@@ -764,7 +764,11 @@ public class MainActivity extends AppCompatActivity {
                         //alize.resetAudio();
 
                         float rms = RelativeAudioParser.RMS(trimmedBuffer);
-                        boolean speakerMatch = RelativeAudioParser.isSpeakerMatch(movingavg.getNormalizedFftBins());
+                        boolean speakerMatch = false;
+                        if (!USE_WOZ)
+                        {
+                            speakerMatch = RelativeAudioParser.isSpeakerMatch(movingavg.getNormalizedFftBins());
+                        }
 
                         //add result to moving average -- but only if we don't detect the speaker
                         if (envNoiseLevel < 0 || !speakerMatch) {
