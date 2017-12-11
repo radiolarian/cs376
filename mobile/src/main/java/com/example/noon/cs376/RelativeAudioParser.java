@@ -11,7 +11,7 @@ import static com.example.noon.cs376.DSP.printArray;
 
 public class RelativeAudioParser {
     private final static double FREQUENCY_DISTANCE_THRESHOLD = 3; // the allowable distance in hertz is this number * sample_rate / num_fft_bins
-    private final static double MATCH_ALPHA = .7;
+    private final static double MATCH_ALPHA = .65;
 
     static int speakerMode;
     static int numRelevantBins;
@@ -91,8 +91,11 @@ public class RelativeAudioParser {
 
         double alpha = (DSP.max(xcorr) / perfectCorr);
 
-        System.out.print("Xcorr coeff: " + alpha + " --- ");
-        printArray(xcorr);
+
+        if (MainActivity.LOGGING) {
+            System.out.print("Xcorr coeff: " + alpha + " --- ");
+            printArray(xcorr);
+        }
 
         return alpha >= MATCH_ALPHA;
     }

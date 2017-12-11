@@ -45,10 +45,12 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int MOVING_AVG_WINDOW_SIZE = 5; //num of audio samples to determine BG vol
+    public static final boolean LOGGING = false;
+
+    private static final int MOVING_AVG_WINDOW_SIZE = 8; //num of audio samples to determine BG vol
     private static final int FREQUENCY = 8000;
     private static final int VIBRATION_DURATION = 400;
-    private static final int DELAY_SAMPLES_AFTER_VIBRATION = 3;
+    private static final int DELAY_SAMPLES_AFTER_VIBRATION = 1;
     // Audio recording + play back
 
     // Dialogs
@@ -783,8 +785,9 @@ public class MainActivity extends AppCompatActivity {
 
                         //fill result
 
-                        Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
-
+                        if (LOGGING) {
+                            Log.d("Test", "Speaker frequency: " + RelativeAudioParser.getSpeakerFrequency() + ", Current frequency: " + RelativeAudioParser.getCurrentFrequency());
+                        }
                         /*
                         System.out.print("Current bins are: ");
                         double[] currentBins = RelativeAudioParser.getCurrentBins();
@@ -839,7 +842,9 @@ public class MainActivity extends AppCompatActivity {
                     // if not, just log time and ambient noise level
                     // todo: think about if we should log ambient noise every like x minutes instead?
 
-                    Log.d("ParseResult", "RMS: " + result.data + ", EnvNoise: " + result.envNoise + ", isMatch: " + result.speakerMatch);
+                    if (LOGGING) {
+                        Log.d("ParseResult", "RMS: " + result.data + ", EnvNoise: " + result.envNoise + ", isMatch: " + result.speakerMatch);
+                    }
 
                     //graph it
                     Date timestamp = Calendar.getInstance().getTime();

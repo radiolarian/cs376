@@ -35,7 +35,7 @@ package com.example.noon.cs376;
  */
 
 public class MovingAverage {
-    private static final Float tolerance = 500f;
+    private static final Float tolerance = 150f;
     private Queue<Float> mWindow = new LinkedList<Float>();
     private Queue<Float> mCandidateWindow = new LinkedList<Float>();
     private Queue<double[]> mFftWindow = new LinkedList<double[]>();
@@ -77,6 +77,7 @@ public class MovingAverage {
                 mCandidateFftWindow.add(fftMag);
                 addCandidateFftBins(fftMag);
                 if (mCandidateWindow.size() == mPeriod) {
+                    System.out.println("Swapping!");
                     mWindow = mCandidateWindow;
                     mFftWindow = mCandidateFftWindow;
                     mSum = mCandidateSum;
